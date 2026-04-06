@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EkkoShop — Electronics & Tech</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <link rel="icon" href="ekkoShopFavicon.png">
+</head>
+<body>
+
+  <!-- ══ LIGHTBOX ══ -->
+  <div id="lightbox" onclick="if(event.target===this)closeLightboxGlobal()">
+    <button id="lb-close" onclick="closeLightboxGlobal()">✕</button>
+    <img id="lightbox-img" src="" alt=""/>
+  </div>
+
+  <!-- ══ UPLOAD MODAL (admin only) ══ -->
+  <div id="upload-modal">
+    <div class="modal-box">
+      <button class="modal-close" id="upload-modal-close">✕</button>
+      <div class="modal-title" data-i18n="upload.title">Upload Image</div>
+      <p class="modal-sub">Product #<strong id="upload-pid">—</strong></p>
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="upload-file-input" accept="image/*"/>
+        <div class="dz-icon">📸</div>
+        <div class="dz-text" data-i18n="upload.drop">Drop an image or click to browse</div>
+        <div class="dz-hint" data-i18n="upload.hint">JPG · PNG · WEBP — max 10MB</div>
+      </div>
+      <img class="upload-preview" id="upload-preview" src="" alt=""/>
+      <div class="upload-filename" id="upload-filename"></div>
+      <div class="upload-bar-wrap" id="upload-bar-wrap"><div class="upload-bar" id="upload-bar"></div></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-do-upload" disabled>⬆ Upload</button>
+        <button class="btn btn-ghost" id="btn-upload-cancel">Cancel</button>
+      </div>
+      <div id="upload-result"></div>
+    </div>
+  </div>
+
+  <!-- ══ PRODUCT DETAIL MODAL ══ -->
+  <div id="product-modal">
+    <div class="modal-box modal-large" id="product-modal-box">
+      <button class="modal-close" id="product-modal-close">✕</button>
+      <div id="product-modal-body">
+        <div class="modal-loading">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ADMIN PANEL DRAWER (slide-in) ══ -->
+  <div id="admin-drawer">
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="drawer-panel" id="drawer-panel">
+      <div class="drawer-header">
+        <span class="drawer-title" data-i18n="drawer.title">⚙ Admin Panel</span>
+        <button class="modal-close" id="drawer-close">✕</button>
+      </div>
+      <div class="drawer-body" id="drawer-body"></div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE ══ -->
+  <div id="page">
+
+    <!-- HEADER -->
+    <header id="site-header">
+      <div class="header-inner">
+        <a class="logo" href="index.html">
+          <span class="logo-mark">E</span>
+          <span class="logo-text">kkoShop</span>
+        </a>
+
+        <!-- SEARCH -->
+        <div class="header-search">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="header-search" placeholder="Search products, categories…" data-i18n-placeholder="search.placeholder"/>
+          <kbd>↵</kbd>
+        </div>
+
+        <!-- NAV ACTIONS -->
+        <div class="header-actions">
+          <button class="lang-toggle" id="btn-lang" title="Switch language">
+            <span id="lang-flag">🇬🇪</span>
+            <span id="lang-label">ქარ</span>
+          </button>
+          <button class="action-btn wishlist-btn" id="btn-wishlist" title="Wishlist" style="display:none">
+            <span class="action-icon">♡</span>
+            <span class="action-label" data-i18n="wishlist.title">Wishlist</span>
+            <span class="cart-badge wishlist-badge" id="wishlist-badge" style="display:none">0</span>
+          </button>
+          <button class="action-btn cart-btn" id="btn-cart" title="Cart">
+            <span class="action-icon">🛒</span>
+            <span class="action-label" data-i18n="header.cart">Cart</span>
+            <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+          </button>
+
+          <!-- Logged-out state -->
+          <div id="auth-guest" class="auth-actions">
+            <a class="btn btn-ghost btn-sm" href="login.html" data-i18n="header.login">Log In</a>
+            <a class="btn btn-primary btn-sm" href="register.html" data-i18n="header.signup">Sign Up</a>
+          </div>
+
+          <!-- Logged-in state -->
+          <div id="auth-user" class="auth-actions" style="display:none">
+            <div class="user-menu" id="user-menu">
+              <button class="user-avatar" id="user-avatar-btn">
+                <span id="user-initials">??</span>
+              </button>
+              <div class="user-dropdown" id="user-dropdown">
+                <div class="user-info">
+                  <span id="user-fullname">—</span>
+                  <span id="user-email-display" class="user-email">—</span>
+                  <span id="user-role-badge" class="role-badge">Client</span>
+                </div>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" id="btn-admin-panel" style="display:none">⚙ Admin Panel</button>
+                <button class="dropdown-item danger" id="btn-logout">↩ Log Out</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORY NAV -->
+      <nav class="category-nav" id="category-nav">
+        <div class="cat-nav-inner">
+          <!-- JS fills -->
+        </div>
+      </nav>
+      <!-- CHILD SUBNAV (shown when parent selected) -->
+      <div class="cat-subnav" id="cat-subnav" style="display:none">
+        <div class="cat-nav-inner" id="cat-subnav-inner">
+          <!-- JS fills -->
+        </div>
+      </div>
+    </header>
+
+    <!-- HERO BANNER -->
+    <section class="hero" id="hero">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <div class="hero-tag" data-i18n="hero.tag">New Arrivals 2025</div>
+          <h1 class="hero-heading">Tech that <em>moves</em><br/>your world forward</h1>
+          <p class="hero-sub"><span data-i18n="hero.sub">Discover cutting-edge electronics, laptops, smartphones and more — shipped fast to your door.</span></p>
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" onclick="document.getElementById('shop-section').scrollIntoView({behavior:'smooth'})" data-i18n="hero.shopNow">Shop Now →</button>
+            <button class="btn btn-outline btn-lg" onclick="document.getElementById('hero').nextElementSibling.scrollIntoView({behavior:'smooth'})" data-i18n="hero.browse">Browse Categories</button>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-glow"></div>
+          <div class="hero-product-float">
+            <div class="float-card fc1">
+              <span>🔥</span>
+              <span>RTX 5080<br/><small>Just arrived</small></span>
+            </div>
+            <div class="float-card fc2">
+              <span>⚡</span>
+              <span>Fast Delivery<br/><small>Same day</small></span>
+            </div>
+            <div class="float-card fc3">
+              <span>🛡</span>
+              <span>2 Year Warranty<br/><small>All products</small></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATEGORY TILES -->
+    <section class="category-section" id="categories-section">
+      <div class="section-inner">
+        <h2 class="section-title" data-i18n="categories.title">Browse by Category</h2>
+        <div class="category-grid" id="category-tiles"></div>
+      </div>
+    </section>
+
+    <!-- SHOP SECTION -->
+    <section class="shop-section" id="shop-section">
+      <div class="section-inner">
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar" id="filter-bar">
+          <div class="filter-left">
+            <h2 class="shop-title" id="shop-title">All Products</h2>
+            <span class="product-count" id="product-count"></span>
+          </div>
+          <div class="filter-right">
+            <div class="filter-group">
+              <select id="f-category" class="filter-select" data-category-select="All Categories"></select>
+            </div>
+            <div class="filter-group">
+              <select id="f-available" class="filter-select">
+                <option value="" data-i18n="filter.allStock">All Stock</option>
+                <option value="true" data-i18n="filter.inStock">In Stock</option>
+                <option value="false" data-i18n="filter.outOfStock">Out of Stock</option>
+              </select>
+            </div>
+            <div class="filter-group price-range">
+              <input type="number" id="f-minprice" placeholder="Min ₾" data-i18n-placeholder="filter.minPrice" class="filter-input-sm"/>
+              <span>–</span>
+              <input type="number" id="f-maxprice" placeholder="Max ₾" data-i18n-placeholder="filter.maxPrice" class="filter-input-sm"/>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-filter" data-i18n="filter.apply">Filter</button>
+            <button class="btn btn-ghost btn-sm" id="btn-clear-filter" data-i18n="filter.clear">Clear</button>
+          </div>
+        </div>
+
+        <!-- PRODUCT GRID -->
+        <div id="product-grid" class="product-grid"></div>
+        <div id="products-empty" style="display:none" class="empty-state">
+          <span>😔</span>
+          <p>No products found matching your filters.</p>
+          <button class="btn btn-ghost" id="btn-empty-clear">Clear Filters</button>
+        </div>
+        <div id="products-loading" class="grid-loading">
+          <div class="loader-ring"></div>
+        </div>
+
+        <!-- PAGINATION -->
+        <div id="pagination" class="pagination"></div>
+      </div>
+    </section>
+
+    <!-- WISHLIST PANEL -->
+    <div id="wishlist-overlay" style="display:none">
+      <div class="cart-panel wishlist-panel">
+        <div class="wishlist-header">
+          <h3 data-i18n="wishlist.title">Wishlist</h3>
+          <span class="wishlist-count" id="wishlist-count"></span>
+          <button class="modal-close" id="wishlist-close">✕</button>
+        </div>
+        <div class="wishlist-body" id="wishlist-body">
+          <div class="wishlist-empty" id="wishlist-empty">
+            <span class="wishlist-empty-icon">♡</span>
+            <p data-i18n="wishlist.empty">Your wishlist is empty</p>
+            <small data-i18n="wishlist.emptySub">Click ♡ on any product to save it here</small>
+          </div>
+          <div class="wishlist-items" id="wishlist-items"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CART COMING SOON -->
+    <div id="cart-overlay" style="display:none">
+      <div class="cart-panel">
+        <button class="modal-close" id="cart-close">✕</button>
+        <div class="cart-coming-soon">
+          <div class="cs-icon">🛒</div>
+          <h3 data-i18n="cart.title">Cart is Coming Soon</h3>
+          <p><span data-i18n="cart.sub">We're working hard to bring you a seamless checkout experience. Stay tuned!</span></p>
+          <div class="cs-progress">
+            <div class="cs-progress-bar" style="width:65%"></div>
+          </div>
+          <span class="cs-label"><span data-i18n="cart.progress">65% complete</span></span>
+          <button class="btn btn-ghost" onclick="closeCart()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a class="logo" href="index.html">
+            <span class="logo-mark">E</span>
+            <span class="logo-text">kkoShop</span>
+          </a>
+          <p data-i18n="footer.tagline">Georgia's favourite online tech store.<br/>Quality products, fast delivery.</p>
+          <div class="footer-contact-list">
+            <div class="footer-contact-item">
+              <span class="fc-icon">📍</span>
+              <span>123 Tech Street, Tbilisi, Georgia</span>
+            </div>
+            <div class="footer-contact-item">
+              <span class="fc-icon">📞</span>
+              <a href="tel:+995599931611">+995 599 931 611</a>
+            </div>
+            <div class="footer-contact-item">
+              <span class="fc-icon">✉️</span>
+              <a href="mailto:temomeshveliani777@gmail.com">temomeshveliani777@gmail.com</a>
+            </div>
+            <div class="footer-contact-item">
+              <span class="fc-icon">🕐</span>
+              <span>Mon–Fri &nbsp;9:00–18:00</span>
+            </div>
+          </div>
+          <div class="footer-social">
+            <a href="https://www.linkedin.com/in/temo-meshveliani-543641345/" class="social-link">In</a>
+            <a href="https://github.com/meshvelianitemo" class="social-link">Git</a>
+            <a href="https://www.instagram.com/meshvelianitemo/" class="social-link">IG</a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <div class="footer-col">
+            <h4 data-i18n="footer.shop">Shop</h4>
+            <a href="#" class="footer-cat-link" data-cat="4">Gaming PCs & Laptops</a>
+            <a href="#" class="footer-cat-link" data-cat="2">PC Hardware</a>
+            <a href="#" class="footer-cat-link" data-cat="3">Peripherals</a>
+            <a href="#" class="footer-cat-link" data-cat="1">Consoles</a>
+            <a href="#" class="footer-cat-link" data-cat="5">Services</a>
+          </div>
+          <div class="footer-col">
+            <h4 data-i18n="footer.help">Help</h4>
+            <a href="mailto:temomeshveliani777@gmail.com" data-i18n="footer.contact">Contact Us</a>
+            <a href="#" data-i18n="footer.returns">Returns</a>
+            <a href="#" data-i18n="footer.shipping">Shipping Info</a>
+            <a href="#" data-i18n="footer.faq">FAQ</a>
+          </div>
+          <div class="footer-col">
+            <h4 data-i18n="footer.company">Company</h4>
+            <a href="#" data-i18n="footer.about">About</a>
+            <a href="#" data-i18n="footer.careers">Careers</a>
+            <a href="#" data-i18n="footer.press">Press</a>
+            <a href="#" data-i18n="footer.blog">Blog</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span data-i18n="footer.rights">© 2025 EkkoShop. All rights reserved.</span>
+        <span data-i18n="footer.made">Made with ♥ in Georgia 🇬🇪</span>
+      </div>
+    </footer>
+
+  </div><!-- #page -->
+
+  <!-- TOAST -->
+  <div id="toast-container"></div>
+
+  <script type="module" src="js/store.js"></script>
+  <script>
+    function closeLightboxGlobal() {
+      document.getElementById('lightbox').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    function closeCart() {
+      document.getElementById('cart-overlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  </script>
+</body>
+</html>

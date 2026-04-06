@@ -1,0 +1,64 @@
+# ============================================================
+#  Docker Compose — SEQ Dev Server
+#  Clean Architecture eCommerce Application
+# ============================================================
+#
+#  Usage:
+#    docker compose up -d          → Start in background
+#    docker compose down           → Stop
+#    docker compose down -v        → Stop + wipe log data
+#    docker compose logs -f seq    → Tail SEQ container logs
+#
+#  Web UI  →  http://localhost:5341
+#  Ingestion endpoint  →  http://localhost:5341 (same port, different paths)
+#
+# ============================================================
+
+services:
+  seq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: seq-ecommerce-dev
+    restart: unless-stopped
+
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=DevPassword123!
+
+    ports:
+      # Web UI — open http://localhost:5341 in your browser
+      - "5341:80"
+      # Ingestion — your app sends structured logs here
+      - "5342:5341"
+
+    volumes:
+      # Named volume so your logs survive container restarts
+      - seq_data:/data
+
+    networks:
+      - ecommerce-dev
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/api"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+# -------------------------------------------------------
+#  Persist log data across restarts
+# -------------------------------------------------------
+volumes:
+  seq_data:
+    driver: local
+
+# -------------------------------------------------------
+#  Shared dev network — attach your other services here
+#  (API, workers, etc.) by adding:
+#    networks:
+#      - ecommerce-dev
+# -------------------------------------------------------
+networks:
+  ecommerce-dev:
+    driver: bridge

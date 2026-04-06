@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EkkoShop — Create Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body class="auth-page">
+  <div id="toast-container"></div>
+
+  <div class="auth-layout">
+
+    <!-- LEFT PANEL -->
+    <div class="auth-visual auth-visual--register">
+      <a class="logo auth-logo" href="index.html">
+        <span class="logo-mark">E</span>
+        <span class="logo-text">kkoShop</span>
+      </a>
+      <div class="auth-visual-content">
+        <div class="auth-visual-glow"></div>
+        <h2>Join thousands of happy shoppers.</h2>
+        <p>Get access to exclusive deals, order tracking, and personalised recommendations.</p>
+        <div class="perks-list">
+          <div class="perk"><span>✓</span> Free shipping on orders over ₾50</div>
+          <div class="perk"><span>✓</span> 2-year warranty on all products</div>
+          <div class="perk"><span>✓</span> 30-day hassle-free returns</div>
+          <div class="perk"><span>✓</span> Exclusive member-only discounts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT FORM -->
+    <div class="auth-form-wrap">
+      <div class="auth-form-inner">
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Already have one? <a href="login.html">Log in →</a></p>
+
+        <form class="auth-form" id="register-form" novalidate>
+          <div class="form-row-two">
+            <div class="form-field">
+              <label for="reg-first">First Name</label>
+              <input type="text" id="reg-first" placeholder="John" required/>
+              <span class="field-error" id="reg-first-err"></span>
+            </div>
+            <div class="form-field">
+              <label for="reg-last">Last Name</label>
+              <input type="text" id="reg-last" placeholder="Doe" required/>
+              <span class="field-error" id="reg-last-err"></span>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="reg-email">Email Address</label>
+            <input type="email" id="reg-email" placeholder="you@example.com" required autocomplete="email"/>
+            <span class="field-error" id="reg-email-err"></span>
+          </div>
+
+          <div class="form-field">
+            <label for="reg-phone">Phone Number <span class="optional">(optional)</span></label>
+            <input type="tel" id="reg-phone" placeholder="+995 555 000 000"/>
+          </div>
+
+          <div class="form-field">
+            <label for="reg-password">Password</label>
+            <div class="input-with-icon">
+              <input type="password" id="reg-password" placeholder="Min 8 characters" required autocomplete="new-password"/>
+              <button type="button" class="toggle-pw" data-target="reg-password">👁</button>
+            </div>
+            <div class="pw-strength" id="pw-strength">
+              <div class="pw-bar"><div class="pw-fill" id="pw-fill"></div></div>
+              <span id="pw-label"></span>
+            </div>
+            <span class="field-error" id="reg-pw-err"></span>
+          </div>
+
+          <div class="form-field">
+            <label for="reg-confirm">Confirm Password</label>
+            <div class="input-with-icon">
+              <input type="password" id="reg-confirm" placeholder="Repeat password" required/>
+              <button type="button" class="toggle-pw" data-target="reg-confirm">👁</button>
+            </div>
+            <span class="field-error" id="reg-confirm-err"></span>
+          </div>
+
+          <div class="form-check">
+            <input type="checkbox" id="reg-terms" required/>
+            <label for="reg-terms">
+              I agree to EkkoShop's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+            </label>
+          </div>
+
+          <div id="reg-error" class="form-alert" style="display:none"></div>
+          <div id="reg-success" class="form-alert form-alert--success" style="display:none"></div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="btn-register">
+            <span id="reg-btn-text">Create Account</span>
+          </button>
+        </form>
+
+        <p class="auth-footnote">
+          EkkoShop never shares your data with third parties.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/auth/registerPage.js"></script>
+</body>
+</html>
