@@ -325,7 +325,7 @@ public class ProductRepository : IProductRepository
                         imageUrls = p.ProductImages
                         .Select(i => $"https://{_bucketName}.s3.{_region}.amazonaws.com/{i.ImagePath}")
                         .ToList(),
-                        Amount = p.Amount,
+                        Amount = w.ItemQuantity,
                         ProductCategoryName = p.ProductCategory.CategoryName,
                         CreatedDate = p.CreationDate,
                         UpdatedDate = p.ModifiedDate

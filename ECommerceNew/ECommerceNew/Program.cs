@@ -1,12 +1,14 @@
+using DotNetEnv;
 using ECommerceNew.Application;
 using ECommerceNew.Application.Exceptions;
 using ECommerceNew.Infrastructure;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using PaypalServerSdk.Standard;
+using PaypalServerSdk.Standard.Authentication;
 using Serilog;
 using System.Security.Claims;
-using DotNetEnv;
 
 Env.Load();
 
@@ -56,6 +58,19 @@ x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     };
 });
 
+
+
+var client = new PaypalServerSdkClient.Builder()
+    .ClientCredentialsAuth(
+        new ClientCredentialsAuthModel.Builder(
+            "YOUR_CLIENT_ID",
+            "YOUR_CLIENT_SECRET"
+        ).Build()
+    )
+    .Environment(PaypalServerSdk.Standard.Environment.Sandbox) // or Production
+    .Build();
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -66,6 +81,7 @@ builder.Services.AddCors(options =>
                 "http://localhost:5500",
                 "http://localhost:3000",   
                 "http://127.0.0.1:5500",
+                "http://127.0.0.1:5501",
                 "null"                    
             )
             .AllowAnyMethod()

@@ -154,3 +154,44 @@ export async function removeFromWishlist(userId, productId) {
   console.log('[Wishlist] REMOVE status=', r.status);
   return r;
 }
+
+/* ══════════════════════════════════════
+   CART API
+══════════════════════════════════════ */
+
+/** Fetch cart items for a user */
+export async function fetchCartItems({ userId, page = 1, pageSize = 100 } = {}) {
+  const params = new URLSearchParams();
+  params.set('UserId', userId);
+  params.set('Page', page);
+  params.set('PageSize', pageSize);
+  const r = await authFetch(`${BASE}/api/Products/Cart/Items?${params}`);
+  if (!r.ok || r.status === 204) return [];
+  const data = await r.json();
+  return Array.isArray(data) ? data : (data.items ?? [data]);
+}
+
+/** Add product to cart */
+export async function addToCart(userId, productId, quantity = 1) {
+  return authFetch(`${BASE}/api/Products/Cart/Add`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: parseInt(userId),
+      productId: parseInt(productId),
+      quantity: parseInt(quantity),
+    }),
+  });
+}
+
+/** Remove product from cart */
+export async function removeFromCart(userId, productId) {
+  return authFetch(`${BASE}/api/Products/Cart/Remove`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: parseInt(userId),
+      productId: parseInt(productId),
+    }),
+  });
+}

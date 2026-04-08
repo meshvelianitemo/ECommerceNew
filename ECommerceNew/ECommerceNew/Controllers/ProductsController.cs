@@ -73,7 +73,7 @@ public class ProductsController : ControllerBase
     [HttpGet("Cart/Items")]
     public async Task<ActionResult<CartItemDetailDto>> GetCartItems([FromQuery] CartItemsQueryParameters queryParams , CancellationToken cancellationToken)
     {
-        var cartItems = _sender.Send(new GetCartItemsQuery(queryParams),
+        var cartItems = await _sender.Send(new GetCartItemsQuery(queryParams),
             cancellationToken);
         
         return Ok(cartItems);
