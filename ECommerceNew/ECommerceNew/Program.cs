@@ -1,6 +1,5 @@
 using DotNetEnv;
 using ECommerceNew.Application;
-using ECommerceNew.Application.Exceptions;
 using ECommerceNew.Infrastructure;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

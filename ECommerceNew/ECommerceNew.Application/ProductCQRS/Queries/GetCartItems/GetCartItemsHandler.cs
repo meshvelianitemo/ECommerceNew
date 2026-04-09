@@ -1,7 +1,7 @@
 ﻿
 using ECommerceNew.Application.Abstractions;
-using ECommerceNew.Application.Exceptions;
 using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
+using ECommerceNew.Application.Responses.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using System.Collections;

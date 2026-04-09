@@ -1,5 +1,4 @@
-﻿
-namespace ECommerceNew.Application.Exceptions
+﻿namespace ECommerceNew.Application.Responses.Exceptions
 {
     public class ValidationException : Exception
     {

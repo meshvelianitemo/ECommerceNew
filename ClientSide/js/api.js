@@ -4,6 +4,26 @@
 export { BASE, authFetch } from './auth.js';
 import { BASE, authFetch } from './auth.js';
 
+
+export async function parseResult(response) {
+  let data = null;
+  try {
+    const text = await response.text();
+    if (text) data = JSON.parse(text);
+  } catch { }
+
+  if (data !== null && typeof data === 'object' && 'success' in data) {
+    return {
+      ok:      data.success === true,
+      message: data.error?.message ?? null,
+      code:    data.error?.code    ?? null,
+      data,
+    };
+  }
+
+  return { ok: response.ok, message: null, code: null, data };
+}
+
 export function esc(s) {
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')

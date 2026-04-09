@@ -1,5 +1,6 @@
 /* loginPage.js */
 import { BASE, getCurrentUser, saveToken, decodeJWT } from '../auth.js';
+import { parseResult } from '../api.js'; 
 import { toast } from '../ui.js';
 
 if (getCurrentUser()) window.location.href = '../index.html';
@@ -41,47 +42,28 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
       credentials: 'include',
     });
 
-    const text = await r.text();
-    let data;
-    try { data = JSON.parse(text); } catch { data = null; }
+    const result = await parseResult(r);
 
-    if (r.ok) {
-      /*
-       * The server sets the 'jwt' cookie on its own domain (localhost:7060).
-       * Since our frontend is on a different port, document.cookie can't read it.
-       * So we also look for the token in the response body — check every
-       * common field name the API might use.
-       */
-      const token =
-        data?.token        ||
-        data?.Token        ||
-        data?.accessToken  ||
-        data?.AccessToken  ||
-        data?.jwt          ||
-        data?.JWT          ||
-        // Also check Authorization response header (if server exposes it)
-        (() => {
-          const h = r.headers.get('Authorization') || r.headers.get('authorization') || '';
-          return h.startsWith('Bearer ') ? h.slice(7).trim() : null;
-        })() ||
-        null;
+if (result.ok) {
+  const token =
+    result.data?.token       ||
+    result.data?.Token       ||
+    result.data?.accessToken ||
+    result.data?.AccessToken ||
+    result.data?.jwt         ||
+    result.data?.JWT         || null;
 
-      if (token && token.includes('.') && decodeJWT(token)) {
-        // We got the token — save it to localStorage so all pages can read it
-        saveToken(token);
-      }
-      // Even if we didn't get the token in the body, login was successful
-      // and the cookie was set — it'll work if frontend and API are same origin
+  if (token && token.includes('.') && decodeJWT(token)) {
+    saveToken(token);
+  }
 
-      toast('Welcome back!', 'success');
-      setTimeout(() => { window.location.href = '../index.html'; }, 700);
+  toast('Welcome back!', 'success');
+  setTimeout(() => { window.location.href = '../index.html'; }, 700);
 
-    } else {
-      const msg = data?.message || data?.Message || data?.title
-        || (r.status === 401 ? 'Invalid email or password.' : `Error ${r.status}`);
-      errEl.textContent   = msg;
-      errEl.style.display = 'block';
-    }
+} else {
+  errEl.textContent   = result.message || 'Invalid email or password.';
+  errEl.style.display = 'block';
+}
 
   } catch (err) {
     errEl.textContent = err.message.toLowerCase().includes('fetch')

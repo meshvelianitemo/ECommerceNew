@@ -1,6 +1,6 @@
 ﻿
 using ECommerceNew.Application.Abstractions;
-using ECommerceNew.Application.Exceptions;
+using ECommerceNew.Application.Responses.Exceptions;
 using MediatR;
 
 namespace ECommerceNew.Application.ProductCQRS.Commands.AddToCart

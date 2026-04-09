@@ -1,9 +1,9 @@
-﻿using ECommerceNew.Application.Exceptions;
+﻿
 using Amazon.S3.Model;
 using ECommerceNew.Application.Abstractions;
-using ECommerceNew.Application.Product.DTOs.ProductDtos;
 using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
 using MediatR;
+using ECommerceNew.Application.Responses.Exceptions;
 
 namespace ECommerceNew.Application.ProductCQRS.Queries.GetWishList
 {

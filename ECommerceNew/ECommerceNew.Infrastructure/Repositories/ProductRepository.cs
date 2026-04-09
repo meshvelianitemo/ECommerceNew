@@ -1,8 +1,8 @@
 using Amazon.S3.Model;
 using ECommerceNew.Application.Abstractions;
-using ECommerceNew.Application.Exceptions;
 using ECommerceNew.Application.Product.DTOs.ProductDtos;
 using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
+using ECommerceNew.Application.Responses.Exceptions;
 using ECommerceNew.Domain.Entities.ProductSide;
 using ECommerceNew.Domain.Entities.UserSide;
 using ECommerceNew.Infrastructure.EfCore;

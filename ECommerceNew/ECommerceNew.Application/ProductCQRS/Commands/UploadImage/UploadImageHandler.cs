@@ -1,6 +1,6 @@
 ﻿
 using ECommerceNew.Application.Abstractions;
-using ECommerceNew.Application.Exceptions;
+using ECommerceNew.Application.Responses.Exceptions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

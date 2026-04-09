@@ -1,11 +1,8 @@
 ﻿
 using ECommerceNew.Application.Abstractions;
-using ECommerceNew.Application.Exceptions;
-using ECommerceNew.Application.ProductCQRS.Commands.DeleteProduct;
-using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
+using ECommerceNew.Application.Responses.Exceptions;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
 
 namespace ECommerceNew.Application.ProductCQRS.Commands.UpdateProduct
 {

@@ -1,8 +1,7 @@
-﻿
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using System.Drawing;
 
-namespace ECommerceNew.Application.Exceptions
+namespace ECommerceNew.Application.Responses.Exceptions
 {
     public class CustomException : Exception
     {

@@ -29,7 +29,12 @@ namespace ECommerceNew.Api.Controllers
         {
             var user = await _sender.Send(new LoginCommand(request), cancellationToken);
 
-            var webToken = await _tokenService.GenerateTokenAsync(user, cancellationToken);
+            if (!user.IsSuccess)
+            {
+                return BadRequest(new { success = false, user.Error });
+            }
+
+            var webToken = await _tokenService.GenerateTokenAsync(user.Value, cancellationToken);
 
             Response.Cookies.Append("jwt", webToken, new CookieOptions
             {
@@ -39,7 +44,7 @@ namespace ECommerceNew.Api.Controllers
                 Expires = DateTime.UtcNow.AddMinutes(30)
             });
 
-            return Ok(new { message = "Login Successful!", token = webToken });
+            return Ok(new { success = true, token = webToken });
         }
 
         [HttpPost("Register")]

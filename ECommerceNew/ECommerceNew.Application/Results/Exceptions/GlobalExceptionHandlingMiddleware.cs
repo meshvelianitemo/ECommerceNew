@@ -1,9 +1,8 @@
-﻿
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
 
-namespace ECommerceNew.Application.Exceptions
+namespace ECommerceNew.Application.Responses.Exceptions
 {
     public class GlobalExceptionHandlingMiddleware
     {

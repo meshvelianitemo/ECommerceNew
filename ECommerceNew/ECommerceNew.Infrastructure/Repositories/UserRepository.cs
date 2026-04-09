@@ -1,7 +1,8 @@
 using Amazon.Runtime.Internal;
 using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Auth.DTOs;
-using ECommerceNew.Application.Exceptions;
+using ECommerceNew.Application.Responses.Exceptions;
+using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Domain.Entities.ProductSide;
 using ECommerceNew.Domain.Entities.UserSide;
 using ECommerceNew.Infrastructure.EfCore;
@@ -51,24 +52,23 @@ public class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<User> AuthenticateUserAsync(string email, string password, CancellationToken cancellationToken = default)
+    public async Task<User?> AuthenticateUserAsync(string email, string password, CancellationToken cancellationToken = default)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.IsActive == true, cancellationToken);
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == email && u.IsActive, cancellationToken);
 
         if (user == null)
         {
-            throw new UserNotFoundException("Invalid email or password");
+            return null;
         }
-
         PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
-        var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+        var result = passwordHasher
+            .VerifyHashedPassword(user, user.PasswordHash, password);
+
         if (result == PasswordVerificationResult.Failed)
         {
-            throw new UserNotFoundException("Invalid email or password");
+            return null;
         }
-
-        _logger.LogInformation($"Password: '{password}' Length: {password.Length}");
-        _logger.LogInformation($"Hash from DB: '{user.PasswordHash}'");
 
         return user;
 
