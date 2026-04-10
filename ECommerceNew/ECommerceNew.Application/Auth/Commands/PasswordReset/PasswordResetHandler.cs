@@ -1,11 +1,14 @@
 ﻿
+using Amazon.Runtime;
 using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Auth.Commands.PasswordRecovery;
+using ECommerceNew.Application.Results.Errors;
 using MediatR;
+using System.Reflection.Metadata.Ecma335;
 
 namespace ECommerceNew.Application.Auth.Commands
 {
-    public class PasswordResetHandler : IRequestHandler<PasswordResetCommand, bool>
+    public class PasswordResetHandler : IRequestHandler<PasswordResetCommand, Result>
     {
         private readonly IUserRepository _userRepository;
 
@@ -15,15 +18,17 @@ namespace ECommerceNew.Application.Auth.Commands
             _userRepository = userRepository;
         }
 
-        public async Task<bool> Handle(PasswordResetCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(PasswordResetCommand request, CancellationToken cancellationToken)
         {
             if (request._Dto.NewPassword != request._Dto.ConfirmPassword)
             {
-                throw new ArgumentException("New password and confirmation password do not match.");
+                return Result.Failure(UserErrors.PasswordsDoNotMatch);
             }
 
-            await _userRepository.ResetPaswordAsync(request._Dto, cancellationToken);
-            return true;
+            await _userRepository
+                .ResetPaswordAsync(request._Dto, cancellationToken);
+
+            return Result.Success();
         }
     }
 }

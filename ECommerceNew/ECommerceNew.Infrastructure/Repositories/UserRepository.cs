@@ -129,7 +129,7 @@ public class UserRepository : IUserRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<EmailVerification> AddEmailVerificationRecord(string verificationCode, string email)
+    public async Task<EmailVerification?> AddEmailVerificationRecord(string verificationCode, string email)
     {
         var verificationRecord = new EmailVerification
         {
@@ -140,7 +140,14 @@ public class UserRepository : IUserRepository
         };
 
         await _context.EmailVerifications.AddAsync(verificationRecord);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch
+        {
+            return null; // i mapped this to the error --> "failed to add record, Database error"
+        }
 
         return verificationRecord;
     }
@@ -162,16 +169,19 @@ public class UserRepository : IUserRepository
 
         var user = await _context.Users.Where(u => u.Email == email)
             .FirstOrDefaultAsync();
+        var cart = await _context.Carts.Where(c => c.UserId == user.UserId)
+            .FirstOrDefaultAsync();
         user.IsActive = true;
-
-        //create Cart for the user
-        _context.Carts.Add(new Cart
+        if (cart == null)
         {
-            UserId = user.UserId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        });
-
+            //create Cart for the user
+            _context.Carts.Add(new Cart
+            {
+                UserId = user.UserId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
         return Result.Success();
@@ -187,17 +197,20 @@ public class UserRepository : IUserRepository
         return user;
     }
 
-    public async Task ResetPaswordAsync(PasswordResetDto request, CancellationToken cancellationToken = default)
+    public async Task<Result> ResetPaswordAsync(PasswordResetDto request, CancellationToken cancellationToken = default)
     {
-        var user = await _context.Users.Where(u => u.Email == request.Email).FirstOrDefaultAsync();
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
+
         if (user == null)
         {
-            throw new UserNotFoundException("User with the provided email does not exist.");
+            return Result.Failure(UserErrors.NotFound);
         }
         PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
         user.PasswordHash = passwordHasher.HashPassword(user, request.NewPassword);
 
         await _context.SaveChangesAsync();
+        return Result.Success();
     }
 }
 

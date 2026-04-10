@@ -80,11 +80,11 @@ namespace ECommerceNew.Api.Controllers
         public async Task<IActionResult> SendPasswordRecovery([FromBody] PasswordRecoveryEmailDto request, CancellationToken cancellationToken)
         {
             var result = await _sender.Send(new PasswordRecoveryCommand(request), cancellationToken);
-            if (!result)
+            if (!result.IsSuccess)
             {
-                return BadRequest(new { message = "Failed to send password recovery email." });
+                return BadRequest(new { success = true , message = "Failed to send password recovery email, Try again later." });
             }
-            return Ok(new { message = "Password recovery email sent successfully!" });
+            return Ok(new { success = true , message = "Password recovery email sent successfully!" });
 
         }
 
@@ -92,22 +92,22 @@ namespace ECommerceNew.Api.Controllers
         public async Task<IActionResult> VerifyPasswordRecoveryCode([FromBody] RecoveryCodeVerificationDto request, CancellationToken cancellationToken)
         {
             var result = await _sender.Send(new VerifyRecoveryCodeCommand(request), cancellationToken);
-            //if (!result)
-            //{
-            //    return BadRequest(new { message = "Invalid verification code or email." });
-            //}
-            return Ok(new { message = "Verification code is valid!" });
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new { success = false ,message = result.Error.Message});
+            }
+            return Ok(new { success = true, message = "Verification code is valid!" });
         }
 
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPassword([FromBody] PasswordResetDto request, CancellationToken cancellationToken)
         {
             var result = await _sender.Send(new PasswordResetCommand(request), cancellationToken);
-            if (!result)
+            if (!result.IsSuccess)
             {
-                return BadRequest(new { message = "Failed to reset password. Invalid code or email." });
+                return BadRequest(new { success = false, message = "Failed to reset password. Invalid code or email." });
             }
-            return Ok(new { message = "Password reset successfully!" });
+            return Ok(new { success = true, message = "Password reset successfully!" });
         }
 
         

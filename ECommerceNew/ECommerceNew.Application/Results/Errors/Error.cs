@@ -43,6 +43,12 @@ namespace ECommerceNew.Application.Results.Errors
 
         public static readonly Error ExpiredVerificationCode =
             new("User.ExpiredVerificationCode", "Verification code has expired.");
+
+        public static readonly Error ApplicationError =
+            new("User.ApplicationError", "Verification record couldnt be added, try again later.");
+
+        public static readonly Error PasswordsDoNotMatch =
+            new("User.PasswordsDoNotMatch", "Password and confirmed password do not match.");
     }
 
 }
