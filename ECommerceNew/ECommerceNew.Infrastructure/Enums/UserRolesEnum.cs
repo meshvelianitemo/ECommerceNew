@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ECommerceNew.Infrastructure
+namespace ECommerceNew.Infrastructure.Enums
 {
     public enum UserRolesEnum
     {

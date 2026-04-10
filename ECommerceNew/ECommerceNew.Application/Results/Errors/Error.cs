@@ -30,7 +30,19 @@ namespace ECommerceNew.Application.Results.Errors
             new("User.NotFound", "User was not found");
 
         public static readonly Error InvalidCredentials =
-            new("User.InvalidCredentials", "Invalid  or password");
+            new("User.InvalidCredentials", "Invalid Username or password");
+
+        public static readonly Error EmailAlreadyExists =
+            new("User.EmailAlreadyExists", "A user with this email already exists");
+
+        public static readonly Error InvalidVerificationCode =
+            new("User.InvalidVerificationCode", "Invalid verification code or email.");
+
+        public static readonly Error UsedVerificationCode =
+            new("User.VerificationCodeAlreadyUsed", "Verficiation code is already used.");
+
+        public static readonly Error ExpiredVerificationCode =
+            new("User.ExpiredVerificationCode", "Verification code has expired.");
     }
 
 }

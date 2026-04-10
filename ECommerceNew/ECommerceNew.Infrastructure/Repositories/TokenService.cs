@@ -1,6 +1,7 @@
 ﻿using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Domain.Entities.UserSide;
 using ECommerceNew.Infrastructure.EfCore;
+using ECommerceNew.Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;

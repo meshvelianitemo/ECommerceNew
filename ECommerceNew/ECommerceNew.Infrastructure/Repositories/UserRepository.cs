@@ -6,6 +6,7 @@ using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Domain.Entities.ProductSide;
 using ECommerceNew.Domain.Entities.UserSide;
 using ECommerceNew.Infrastructure.EfCore;
+using ECommerceNew.Infrastructure.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,12 +30,12 @@ public class UserRepository : IUserRepository
         _context = context;    
     }
 
-    public async Task<User> RegisterUserAsync(User user, CancellationToken cancellationToken = default)
-    {
-        await _context.Users.AddAsync(user, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-        return user;
-    }
+    //public async Task<User> RegisterUserAsync(User user, CancellationToken cancellationToken = default)
+    //{
+    //    await _context.Users.AddAsync(user, cancellationToken);
+    //    await _context.SaveChangesAsync(cancellationToken);
+    //    return user;
+    //}
 
     public Task<User?> GetUserByIdAsync(int id, CancellationToken cancellationToken = default)
     {
@@ -75,23 +76,31 @@ public class UserRepository : IUserRepository
 
     }
 
-    public async Task<User> RegisterUserNonActive(RegisterRequest registerRequest, CancellationToken cancellationToken = default)
+    public async Task<User?> RegisterUserNonActive(RegisterRequest registerRequest, CancellationToken cancellationToken = default)
     {
-        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == registerRequest.Email);
+        var existingUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == registerRequest.Email);
 
         PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
 
-        if (existingUser != null)
+        if (existingUser != null )
         {
             if (existingUser.IsActive)
             {
-                throw new UserAlreadyExistsException("A user with this email already exists.");
+                return null;
             }
             _logger.LogInformation($"User with email {registerRequest.Email} already exists but is not active. Proceeding with registration.");
             existingUser.PasswordHash = passwordHasher.HashPassword(existingUser, registerRequest.Password);
             existingUser.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (Application.Responses.Exceptions.DbUpdateException)
+            {
+                return null; 
+            }
             return existingUser;
         }
 
@@ -136,19 +145,19 @@ public class UserRepository : IUserRepository
         return verificationRecord;
     }
 
-    public async Task<bool> VerifyVerificationCode(string email, string code, CancellationToken cancellationToken = default)
+    public async Task<Result> VerifyVerificationCode(string email, string code, CancellationToken cancellationToken = default)
     {
         var verificationRecord = await _context.EmailVerifications.Where(ev => ev.Email == email && ev.VerificationCode == code)
             .FirstOrDefaultAsync(cancellationToken);
-        if (verificationRecord ==null) 
-            throw new NoVerificationRecordFoundException("No verification record found for the provided email and code.");
+        if (verificationRecord ==null)
+            return Result.Failure(UserErrors.InvalidVerificationCode);
 
         if (verificationRecord.IsVerified == true )
-            throw new InvalidOperationException("This verification code has already been used.");
+            return Result.Failure(UserErrors.UsedVerificationCode);
 
         if (verificationRecord.ExpirationTime < DateTime.UtcNow)
-            throw new InvalidOperationException("This verification code has expired.");
-        
+            return Result.Failure(UserErrors.ExpiredVerificationCode);
+
         verificationRecord.IsVerified = true;
 
         var user = await _context.Users.Where(u => u.Email == email)
@@ -165,7 +174,7 @@ public class UserRepository : IUserRepository
 
 
         await _context.SaveChangesAsync(cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     public async Task<User> GetUserByEmail(string email, CancellationToken cancellationToken = default)

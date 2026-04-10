@@ -27,14 +27,14 @@ namespace ECommerceNew.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
         {
-            var user = await _sender.Send(new LoginCommand(request), cancellationToken);
+            var result = await _sender.Send(new LoginCommand(request), cancellationToken);
 
-            if (!user.IsSuccess)
+            if (!result.IsSuccess)
             {
-                return BadRequest(new { success = false, user.Error });
+                return Unauthorized(new { success = false, result.Error });
             }
 
-            var webToken = await _tokenService.GenerateTokenAsync(user.Value, cancellationToken);
+            var webToken = await _tokenService.GenerateTokenAsync(result.Value, cancellationToken);
 
             Response.Cookies.Append("jwt", webToken, new CookieOptions
             {
@@ -51,7 +51,11 @@ namespace ECommerceNew.Api.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
         {
             var user = await _sender.Send(new RegisterCommand(request), cancellationToken);
-            return Ok(user);
+            if (!user.IsSuccess)
+            {
+                return BadRequest(new { success = false, message = user.Error });
+            }
+            return Ok(new { success = true , userId = user.Value.UserId });
         }
 
         [HttpPost("VerifyEmail")]
@@ -59,11 +63,17 @@ namespace ECommerceNew.Api.Controllers
         {
             var result = await _sender.Send(new VerificationCommand(request), cancellationToken);
 
-            if (!result)
+            if (!result.IsSuccess)
             {
-                return BadRequest(new { message = "Invalid verification code or email." });
+                return result.Error.Code switch
+                {
+                    "User.InvalidVerificationCode" => BadRequest(new {success= false, result.Error.Message }),
+                    "User.VerificationCodeAlreadyUsed" => Conflict(new { success = false, result.Error.Message }),
+                    "User.ExpiredVerificationCode" => BadRequest(new { success = false, result.Error.Message }),
+                    _ => StatusCode(500)
+                };
             }
-            return Ok(new { message = "Email verified successfully!" });
+            return Ok(new {success = true, message = "Email verified successfully!" });
         }
 
         [HttpPost("SendPasswordRecovery")]
@@ -82,10 +92,10 @@ namespace ECommerceNew.Api.Controllers
         public async Task<IActionResult> VerifyPasswordRecoveryCode([FromBody] RecoveryCodeVerificationDto request, CancellationToken cancellationToken)
         {
             var result = await _sender.Send(new VerifyRecoveryCodeCommand(request), cancellationToken);
-            if (!result)
-            {
-                return BadRequest(new { message = "Invalid verification code or email." });
-            }
+            //if (!result)
+            //{
+            //    return BadRequest(new { message = "Invalid verification code or email." });
+            //}
             return Ok(new { message = "Verification code is valid!" });
         }
 
