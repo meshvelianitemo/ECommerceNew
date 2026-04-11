@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using ECommerceNew.Application.Abstractions;
+using ECommerceNew.Application.Results.Errors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
@@ -25,7 +26,7 @@ namespace ECommerceNew.Infrastructure.Repositories
             _bucketName = config["AWS:Bucket"];
             _region = config["AWS:Region"];
 
-            _productRepository  = repo;
+            _productRepository = repo;
             _client = new AmazonS3Client(accessKey, secretKey, region);
         }
 
@@ -42,28 +43,28 @@ namespace ECommerceNew.Infrastructure.Repositories
 
         }
 
-        public async Task<List<string?>> GetImageUrl(int productId, CancellationToken cancelationToken)
+        public async Task<Result<List<string?>>> GetImageUrl(int productId, CancellationToken cancelationToken)
         {
-            var key = await _productRepository.ExtractImageUrl(productId, cancelationToken);
+            var result = await _productRepository.ExtractImageUrl(productId, cancelationToken);
 
-            if (key.Count ==0)
-                return new List<string>(); 
+            if (!result.IsSuccess)
+                return result;
 
             List<string?> preSignedUrls = new List<string?>();
 
-            for (int i = 0; i < key.Count; i++)
+            for (int i = 0; i < result.Value.Count; i++)
             {
                  var request = new GetPreSignedUrlRequest
                 {
                     BucketName = _bucketName,
-                    Key = key[i],
+                    Key = result.Value[i],
                     Expires = DateTime.UtcNow.AddHours(1)
                 };
                 var url = _client.GetPreSignedURL(request);
                 preSignedUrls.Add(url);
             }
            
-            return preSignedUrls;
+            return Result<List<string>>.Success(preSignedUrls);
 
 
         }

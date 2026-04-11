@@ -1,4 +1,5 @@
 ﻿using ECommerceNew.Application.Abstractions;
+using ECommerceNew.Application.Results.Errors;
 using MediatR;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ECommerceNew.Application.ProductCQRS.Queries.GetImagePreSignedUrl
 {
-    public class GetPreSignedUrlQueryHandler : IRequestHandler<GetPreSignedUrlQuery, List<string>>
+    public class GetPreSignedUrlQueryHandler : IRequestHandler<GetPreSignedUrlQuery, Result<List<string>>>
     {
         private readonly IStorageRepoistory _storageRepository;
 
@@ -17,14 +18,14 @@ namespace ECommerceNew.Application.ProductCQRS.Queries.GetImagePreSignedUrl
         {
             _storageRepository = storageRepository;
         }
-        public async Task<List<string>> Handle(GetPreSignedUrlQuery request, CancellationToken cancellationToken)
+        public async Task<Result<List<string>>> Handle(GetPreSignedUrlQuery request, CancellationToken cancellationToken)
         {
-            var urls = await _storageRepository.GetImageUrl(request.productId, cancellationToken);
-            if (urls == null || urls.Count == 0)
+            var result = await _storageRepository.GetImageUrl(request.productId, cancellationToken);
+            if (!result.IsSuccess)
             {
-                throw new SecurityTokenException("No image found for the specified product.");
+                return Result<List<string>>.Failure(ProductErrors.ImagesNotFound);
             }
-            return urls;
+            return Result<List<string>>.Success(result.Value);
 
         }
     }

@@ -15,9 +15,9 @@ namespace ECommerceNew.Application.Auth.Commands.EmailVerification
         {
             _userRepository = userRepository;
         }
-        public Task<Result> Handle(VerificationCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(VerificationCommand request, CancellationToken cancellationToken)
         {
-            var result =  _userRepository.VerifyVerificationCode(
+            var result =  await _userRepository.VerifyVerificationCode(
                 request._Dto.Email,
                 request._Dto.VerificationCode,
                 cancellationToken);

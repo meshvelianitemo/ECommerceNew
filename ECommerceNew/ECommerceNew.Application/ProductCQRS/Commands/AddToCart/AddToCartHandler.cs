@@ -1,11 +1,12 @@
 ﻿
 using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Responses.Exceptions;
+using ECommerceNew.Application.Results.Errors;
 using MediatR;
 
 namespace ECommerceNew.Application.ProductCQRS.Commands.AddToCart
 {
-    public class AddToCartHandler : IRequestHandler<AddToCartCommand, bool>
+    public class AddToCartHandler : IRequestHandler<AddToCartCommand, Result>
     {
         private readonly IProductRepository _productReposistory;
 
@@ -14,18 +15,18 @@ namespace ECommerceNew.Application.ProductCQRS.Commands.AddToCart
             _productReposistory = productReposistory;
         }
 
-        public async Task<bool> Handle(AddToCartCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(AddToCartCommand request, CancellationToken cancellationToken)
         {
             var result = await _productReposistory.AddToCart(request._Dto.ProductId,
                 request._Dto.UserId,
                 request._Dto.Quantity
                 );
 
-            if (!result)
+            if (!result.IsSuccess)
             {
-                throw new DbUpdateException("Adding product to cart failed!");
+                return result;
             }
-            return true;
+            return Result.Success();
         }
     }
 }

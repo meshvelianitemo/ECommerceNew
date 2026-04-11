@@ -28,7 +28,15 @@ namespace ECommerceNew.Application.Results.Errors
         public static readonly Error OutOfStock =
             new("Product.OutOfStock", "Product is out of stock", "Products");
 
-        
+        public static readonly Error ImagesNotFound =
+            new("Product.ImagesNotFound", "No images found for this product", "Products");
+
+        public static readonly Error AddToCartFailed =
+            new("Product.AddToCartFailed", "Failed to add product to cart", "Products->Database");
+
+        public static readonly Error AlreadyInWishlist =
+            new("Product.AlreadyInWishlist", "Product is already in the wishlist", "Products->Wishlist");
+
     }
     
     public static class UserErrors
@@ -56,6 +64,9 @@ namespace ECommerceNew.Application.Results.Errors
 
         public static readonly Error PasswordsDoNotMatch =
             new("User.PasswordsDoNotMatch", "Password and confirmed password do not match.", "Validation");
+
+        public static readonly Error CartNotFound =
+            new("User.CartNotFound", "Cart was not found for the user.", "User<->Cart");
     }
 
 }

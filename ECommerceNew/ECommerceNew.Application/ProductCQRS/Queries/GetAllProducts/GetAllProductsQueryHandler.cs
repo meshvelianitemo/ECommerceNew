@@ -1,6 +1,7 @@
 ﻿using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Product.DTOs.ProductDtos;
 using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
+using ECommerceNew.Application.Results.Errors;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace ECommerceNew.Application.ProductCQRS.Queries.GetAllProducts
 {
     
     public class GetAllProductsQueryHandler 
-        : IRequestHandler<GetAllProductsQuery, PagedResult<ProductDetailDto>>
+        : IRequestHandler<GetAllProductsQuery, Result<PagedResult<ProductDetailDto>>>
     {
         private readonly IProductRepository _productRepository;
 
@@ -21,15 +22,15 @@ namespace ECommerceNew.Application.ProductCQRS.Queries.GetAllProducts
             _productRepository = productRepository;
         }
 
-        public async Task<PagedResult<ProductDetailDto>> Handle(
+        public async Task<Result<PagedResult<ProductDetailDto>>> Handle(
             GetAllProductsQuery request,
             CancellationToken cancellationToken)
         {
             var products = await _productRepository.ListAsync(
                 request.queryParams,
                 cancellationToken);
-
-            return products;
+            var result = Result<PagedResult<ProductDetailDto>>.Success(products);
+            return result;
         }
     }
 }

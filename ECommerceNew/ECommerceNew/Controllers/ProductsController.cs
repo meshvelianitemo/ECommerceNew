@@ -20,6 +20,7 @@ using ECommerceNew.Application.Results.Errors;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sprache;
 
 namespace ECommerceNew.Controllers;
 
@@ -58,93 +59,194 @@ public class ProductsController : ControllerBase
     [HttpGet("All")]
     public async Task<ActionResult<ProductDetailDto>> GetAll([FromQuery] ProductQueryParameters queryParams , CancellationToken cancellationToken)
     {
-        var products = await _sender.Send(new GetAllProductsQuery(queryParams), cancellationToken);
-        if (products.Items.Count == 0)
+        var result = await _sender.Send(new GetAllProductsQuery(queryParams), cancellationToken);
+        if (!result.IsSuccess)
         {
-            return NoContent();
+            return NotFound(new {success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
-        return Ok(products);
+        return Ok(new {success = true , result.Value});
     }
     [Authorize]
     [HttpGet("Wishlist")]
     public async Task<ActionResult<WishListDetailDto>> GetWishlist([FromQuery] WishlistQueryParameters queryParams, CancellationToken cancellationToken)
     {
         
-        var wishlistItems = await _sender.Send(new GetWishListQuery(queryParams), cancellationToken);
-        if(wishlistItems.Items.Count == 0)
+        var result = await _sender.Send(new GetWishListQuery(queryParams), cancellationToken);
+        if(!result.IsSuccess)
         {
-            return BadRequest(new {Message = "Invalid UserId or no Wishlist items yet!"});
+            return NotFound(new {
+                    success = false,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
         }
-        return Ok(wishlistItems);
+        return Ok(new { success = true, result.Value });
     }
 
     [Authorize]
     [HttpGet("Cart/Items")]
     public async Task<ActionResult<CartItemDetailDto>> GetCartItems([FromQuery] CartItemsQueryParameters queryParams , CancellationToken cancellationToken)
     {
-        var cartItems = await _sender.Send(new GetCartItemsQuery(queryParams),
+        var result = await _sender.Send(new GetCartItemsQuery(queryParams),
             cancellationToken);
-        
-        return Ok(cartItems);
+        if (!result.IsSuccess)
+        {
+            return NotFound(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
+        }
+        return Ok(new { success = true, result.Value });
     }
-
+    
     [HttpGet("GetImageUrls/{productId:int}")]
     public async Task<ActionResult<ProductImagesDto>> GetImageUrls(int productId, CancellationToken cancellationToken)
     {
-        var imageUrls = await _sender.Send(new GetPreSignedUrlQuery(productId), cancellationToken);
-        if (imageUrls.Count == 0)
+        var result = await _sender.Send(new GetPreSignedUrlQuery(productId), cancellationToken);
+        if (!result.IsSuccess)
         {
-            return NoContent();
+            return NotFound(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
-        return Ok(new ProductImagesDto { productId = productId, ImageUrls = imageUrls});
+        return Ok(new { success = true, Urls =  result.Value });
     }
 
     [Authorize(Roles ="Admin")]
     [HttpPost("Create")]
     public async Task<ActionResult<int>> Create([FromBody] CreateProductDto dto, CancellationToken cancellationToken)
     {
-        var id = await _sender.Send(new CreateProductCommand(dto), cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id }, id);
+        var result = await _sender.Send(new CreateProductCommand(dto), cancellationToken);
+        if (!result.IsSuccess)
+        {
+            return NotFound(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
+        }
+        return CreatedAtAction(nameof(GetById), new { id = result.Value }, new {success = true , productId = result.Value});
     }
 
+    [Authorize]
     [HttpPost("Cart/Add")]
     public async Task<IActionResult> AddToCart([FromBody] AddToCartDto dto, CancellationToken cancellationToken)
     {
         var result = await _sender.Send(new AddToCartCommand(dto), 
             cancellationToken);
-        if (!result)
+        if (!result.IsSuccess)
         {
-            return BadRequest();
+            return NotFound(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
-        return Ok("Item added to cart sucessfully.");
+        return Ok(new { success = true, message = "Item added to cart successfully." });
     }
 
     [Authorize]
     [HttpPost("Wishlist/Add")]
     public async Task<ActionResult> AddToWishlist([FromBody] AddToWishlistDto dto, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("the User with user id of {0} wants to add product with id of {1}", dto.UserId, dto.ProductId);
         var result = await _sender.Send(new AddToWishListCommand(dto), cancellationToken);
-        if (!result)
+        if (result.Error.Code == "Product.AlreadyInWishlist")
         {
-            return BadRequest();
+            return Conflict(new {success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
+        else if (!result.IsSuccess)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
+        }
+
         return Ok("Product Added to Wishlist.");
     }
 
 
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [HttpPost("UploadImage")]
     public async Task<IActionResult> UploadImage(UploadImageDto Dto, CancellationToken cancellationToken)
     {
         if (Dto.Image == null)
         {
-            return BadRequest("No files uploaded.");
+            return BadRequest(new
+            {
+                success = false,
+                error = "Image file is required.",
+            });
         }
         try
         {
-            await _sender.Send(new UploadImageCommand(Dto), cancellationToken);
-            return Ok("Images uploaded successfully.");
+            var result = await _sender.Send(new UploadImageCommand(Dto), cancellationToken);
+            if (!result.IsSuccess)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
+            }
+            return Ok(new
+            {
+                success = true,
+                message = "Images uploaded successfully."
+            });
+        
         }
         catch (Exception ex)
         {

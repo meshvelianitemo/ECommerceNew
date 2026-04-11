@@ -25,9 +25,12 @@ namespace ECommerceNew.Application.Auth.Commands
                 return Result.Failure(UserErrors.PasswordsDoNotMatch);
             }
 
-            await _userRepository
+            var result = await _userRepository
                 .ResetPaswordAsync(request._Dto, cancellationToken);
-
+            if (!result.IsSuccess)
+            {
+                return Result.Failure(UserErrors.NotFound);
+            }
             return Result.Success();
         }
     }

@@ -3,6 +3,7 @@ using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Product.DTOs.ProductDtos;
 using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
 using ECommerceNew.Application.Responses.Exceptions;
+using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Domain.Entities.ProductSide;
 using ECommerceNew.Domain.Entities.UserSide;
 using ECommerceNew.Infrastructure.EfCore;
@@ -33,7 +34,7 @@ public class ProductRepository : IProductRepository
         return product;
     }
 
-    public async Task AddImageUrlAsync(int productId,string key, int userId, CancellationToken cancellationToken = default)
+    public async Task<Result> AddImageUrlAsync(int productId,string key, int userId, CancellationToken cancellationToken = default)
     {
       
         var existingProduct = await _context.Products
@@ -41,7 +42,7 @@ public class ProductRepository : IProductRepository
 
         if (existingProduct == null)
         {
-            throw new ProductNotFoundException("The product was not found!");
+            return Result.Failure(ProductErrors.NotFound);
         }
 
         var productImage = new ProductImage
@@ -52,6 +53,7 @@ public class ProductRepository : IProductRepository
 
         await _context.ProductImages.AddAsync(productImage, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
+        return Result.Success();
     }
 
     public async Task<bool> RemoveImageUrlAsync(int productId, string key, CancellationToken cancellationToken = default)
@@ -75,12 +77,20 @@ public class ProductRepository : IProductRepository
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<List<string>> ExtractImageUrl(int productId, CancellationToken cancellationToken = default)
+    public async Task<Result<List<string>>> ExtractImageUrl(int productId, CancellationToken cancellationToken = default)
     {
-        return await _context.ProductImages
+        var existingProduct = await _context.Products
+            .FirstOrDefaultAsync(p => p.ProductId == productId);
+        if (existingProduct == null)
+        {
+            return Result<List<string>>.Failure(ProductErrors.NotFound);
+        }
+
+        var value = await _context.ProductImages
             .Where(pi => pi.ProductId == productId)
             .Select(pi => pi.ImagePath)
             .ToListAsync(cancellationToken);
+        return Result<List<string>>.Success(value);
 
     }
 
@@ -187,20 +197,25 @@ public class ProductRepository : IProductRepository
         return true;
     }
 
-    public async Task<bool> AddToWishlist(int productId, int userId, CancellationToken cancellationToken = default)
+    public async Task<Result> AddToWishlist(int productId, int userId, CancellationToken cancellationToken = default)
     {
 
         //instead of checking for existing product, we will check for exising wishlistitem
         //because the wishlistitem wouldnt exist in the first place because it contains the foregin key
         //of productId to product table
-
+        var existingProduct = await _context.Products
+            .FirstOrDefaultAsync(p => p.ProductId == productId, cancellationToken);
+        if (existingProduct == null)
+        {
+            return Result.Failure(ProductErrors.NotFound);
+        }
         var existingWishlistItem = await _context.WishListItems
             .Where(p =>  p.ProductId == productId && p.UserId == userId)
             .FirstOrDefaultAsync();
 
         if (existingWishlistItem != null)
         {
-            throw new ItemAlreadyInWishlistException();
+            return Result.Failure(ProductErrors.AlreadyInWishlist);
         }
 
         
@@ -213,7 +228,7 @@ public class ProductRepository : IProductRepository
         _context.WishListItems.Add(newWishListItem);
         await _context.SaveChangesAsync();
 
-        return true;
+        return Result.Success();
     }
 
     public async Task<bool> RemoveWishListItem(int productId,int userId, CancellationToken cancellationToken = default)
@@ -299,7 +314,7 @@ public class ProductRepository : IProductRepository
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
 
-    public async Task<PagedResult<CartItemDetailDto>> GetCartItemsForUserAsync(
+    public async Task<Result<PagedResult<CartItemDetailDto>>> GetCartItemsForUserAsync(
         CartItemsQueryParameters queryParams,
         CancellationToken cancellationToken = default)
     {
@@ -345,7 +360,7 @@ public class ProductRepository : IProductRepository
             .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<CartItemDetailDto>
+        var value = new PagedResult<CartItemDetailDto>
         {
             Items = items,
             TotalCount = totalCount,
@@ -353,6 +368,9 @@ public class ProductRepository : IProductRepository
             PageSize = pageSize,
             TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
         };
+
+        return Result<PagedResult<CartItemDetailDto>>.Success(value);
+        
     }
 
 
@@ -366,11 +384,11 @@ public class ProductRepository : IProductRepository
     /// <returns></returns>
     /// <exception cref="ProductNotFoundException"></exception>
 
-    public async Task<bool> AddToCart(int productId, int userId, int quantity,  CancellationToken cancellationToken = default)
+    public async Task<Result> AddToCart(int productId, int userId, int quantity,  CancellationToken cancellationToken = default)
     {
         if (!await _context.Products.AnyAsync(p => p.ProductId == productId, cancellationToken))
         {
-            throw new ProductNotFoundException();
+            return Result.Failure(ProductErrors.NotFound);
         }
 
         // Check if the item is already in the cart
@@ -378,7 +396,10 @@ public class ProductRepository : IProductRepository
 
         var cart = await _context.Carts
             .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
-
+        if (cart == null)
+        {
+            return Result.Failure(UserErrors.CartNotFound);
+        }
         var cartId = cart.CartId;
 
         var existingCartItem = await _context.CartItems
@@ -414,7 +435,7 @@ public class ProductRepository : IProductRepository
         }
             await _context.SaveChangesAsync(cancellationToken);
 
-        return true;
+        return Result.Success();
     }
 
 
