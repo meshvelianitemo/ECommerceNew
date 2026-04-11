@@ -31,7 +31,14 @@ namespace ECommerceNew.Api.Controllers
 
             if (!result.IsSuccess)
             {
-                return Unauthorized(new { success = false, result.Error });
+                return Unauthorized(new { success = false,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
             }
 
             var webToken = await _tokenService.GenerateTokenAsync(result.Value, cancellationToken);
@@ -50,12 +57,19 @@ namespace ECommerceNew.Api.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
         {
-            var user = await _sender.Send(new RegisterCommand(request), cancellationToken);
-            if (!user.IsSuccess)
+            var result = await _sender.Send(new RegisterCommand(request), cancellationToken);
+            if (!result.IsSuccess)
             {
-                return BadRequest(new { success = false, message = user.Error });
+                return BadRequest(new { success = false,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
             }
-            return Ok(new { success = true , userId = user.Value.UserId });
+            return Ok(new { success = true , message = "To complete registration proceed to Email verification." , userId = result.Value.UserId });
         }
 
         [HttpPost("VerifyEmail")]
@@ -67,9 +81,30 @@ namespace ECommerceNew.Api.Controllers
             {
                 return result.Error.Code switch
                 {
-                    "User.InvalidVerificationCode" => BadRequest(new {success= false, result.Error.Message }),
-                    "User.VerificationCodeAlreadyUsed" => Conflict(new { success = false, result.Error.Message }),
-                    "User.ExpiredVerificationCode" => BadRequest(new { success = false, result.Error.Message }),
+                    "User.InvalidVerificationCode" => BadRequest(new {success= false,
+                        error = new
+                        {
+                            code = result.Error.Code,
+                            message = result.Error.Message,
+                            field = result.Error.Field
+                        }
+                    }),
+                    "User.VerificationCodeAlreadyUsed" => Conflict(new { success = false,
+                        error = new
+                        {
+                            code = result.Error.Code,
+                            message = result.Error.Message,
+                            field = result.Error.Field
+                        }
+                    }),
+                    "User.ExpiredVerificationCode" => BadRequest(new { success = false,
+                        error = new
+                        {
+                            code = result.Error.Code,
+                            message = result.Error.Message,
+                            field = result.Error.Field
+                        }
+                    }),
                     _ => StatusCode(500)
                 };
             }
@@ -82,7 +117,14 @@ namespace ECommerceNew.Api.Controllers
             var result = await _sender.Send(new PasswordRecoveryCommand(request), cancellationToken);
             if (!result.IsSuccess)
             {
-                return BadRequest(new { success = true , message = "Failed to send password recovery email, Try again later." });
+                return BadRequest(new { success = false ,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
             }
             return Ok(new { success = true , message = "Password recovery email sent successfully!" });
 
@@ -94,7 +136,14 @@ namespace ECommerceNew.Api.Controllers
             var result = await _sender.Send(new VerifyRecoveryCodeCommand(request), cancellationToken);
             if (!result.IsSuccess)
             {
-                return BadRequest(new { success = false ,message = result.Error.Message});
+                return BadRequest(new { success = false ,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
             }
             return Ok(new { success = true, message = "Verification code is valid!" });
         }
@@ -105,7 +154,14 @@ namespace ECommerceNew.Api.Controllers
             var result = await _sender.Send(new PasswordResetCommand(request), cancellationToken);
             if (!result.IsSuccess)
             {
-                return BadRequest(new { success = false, message = "Failed to reset password. Invalid code or email." });
+                return BadRequest(new { success = false,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
             }
             return Ok(new { success = true, message = "Password reset successfully!" });
         }

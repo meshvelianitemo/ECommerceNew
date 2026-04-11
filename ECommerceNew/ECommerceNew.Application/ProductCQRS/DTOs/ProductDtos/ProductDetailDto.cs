@@ -1,3 +1,5 @@
+using ECommerceNew.Domain.Entities.ProductSide;
+
 namespace ECommerceNew.Application.Product.DTOs.ProductDtos;
 
 public class ProductDetailDto
@@ -9,7 +11,7 @@ public class ProductDetailDto
     public int Amount { get; set; }
     public int CategoryId { get; set; }
     public string CategoryName { get; set; }
-    public List<string> imageUrl { get; set; }
+    public ICollection<string> imageUrl { get; set; }
     public DateTime CreationDate { get; set; }
     public DateTime ModifiedDate { get; set; }
 }

@@ -17,6 +17,12 @@ namespace ECommerceNew.Application.Auth.Commands.PasswordRecoveryCode
         }
         public async Task<Result> Handle(PasswordRecoveryCommand request, CancellationToken cancellationToken)
         {
+            var existingUser = await _userRepository
+                .GetUserByEmail(request._Dto.Email);
+            if (existingUser == null)
+            {
+                return Result.Failure(UserErrors.NotFound);
+            }
             var verificationCode = await _emailService
                 .SendPasswordRecoveryEmailAsync(request._Dto.Email);
 

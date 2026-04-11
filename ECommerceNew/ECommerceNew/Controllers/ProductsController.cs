@@ -16,6 +16,7 @@ using ECommerceNew.Application.ProductCQRS.Queries.GetCartItems;
 using ECommerceNew.Application.ProductCQRS.Queries.GetImagePreSignedUrl;
 using ECommerceNew.Application.ProductCQRS.Queries.GetWishList;
 using ECommerceNew.Application.Responses.Exceptions;
+using ECommerceNew.Application.Results.Errors;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,15 +37,22 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<ProductDetailDto>> GetById(int id, CancellationToken cancellationToken)
+    public async Task<ActionResult<Result<ProductDetailDto>>> GetById(int id, CancellationToken cancellationToken)
     {
-        var product = await _sender.Send(new GetProductByIdQuery(id), cancellationToken);
-        if (product is null)
+        var result = await _sender.Send(new GetProductByIdQuery(id), cancellationToken);
+        if (!result.IsSuccess)
         {
-            throw new ProductNotFoundException();
+            return NotFound(new {success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
 
-        return Ok(product);
+        return Ok(new {success = true, value = result.Value});
     }
 
     [HttpGet("All")]

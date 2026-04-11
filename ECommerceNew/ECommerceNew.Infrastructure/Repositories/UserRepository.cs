@@ -187,12 +187,12 @@ public class UserRepository : IUserRepository
         return Result.Success();
     }
 
-    public async Task<User> GetUserByEmail(string email, CancellationToken cancellationToken = default)
+    public async Task<User?> GetUserByEmail(string email, CancellationToken cancellationToken = default)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
         if (user == null)
         {
-            throw new UserNotFoundException("User with the provided email does not exist.");
+            return null;
         }
         return user;
     }
