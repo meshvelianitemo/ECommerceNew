@@ -30,7 +30,7 @@ namespace ECommerceNew.Infrastructure.Repositories
             _client = new AmazonS3Client(accessKey, secretKey, region);
         }
 
-        public async Task<bool> DeleteImageAsync(string key, CancellationToken cancellationToken)
+        public async Task<Result> DeleteImageAsync(string key, CancellationToken cancellationToken)
         {
             var request = new DeleteObjectRequest
             {
@@ -39,7 +39,7 @@ namespace ECommerceNew.Infrastructure.Repositories
             };
 
             await _client.DeleteObjectAsync(request, cancellationToken);
-            return true;
+            return Result.Success();
 
         }
 

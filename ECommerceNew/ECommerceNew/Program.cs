@@ -1,13 +1,17 @@
 using DotNetEnv;
 using ECommerceNew.Application;
+using ECommerceNew.Application.Responses.Exceptions;
 using ECommerceNew.Infrastructure;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using PaypalServerSdk.Standard;
 using PaypalServerSdk.Standard.Authentication;
 using Serilog;
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 
 Env.Load();
 
@@ -30,6 +34,43 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
+
+builder.Services.AddRateLimiter(rateLimiterOptions =>
+{
+    rateLimiterOptions.AddPolicy("fixed", httpContext =>
+    RateLimitPartition.GetFixedWindowLimiter(partitionKey: httpContext.Connection
+    .RemoteIpAddress?.ToString() ?? "unknown", factory: partition => new FixedWindowRateLimiterOptions
+    {
+        Window = TimeSpan.FromSeconds(10),
+        PermitLimit = 3,
+        QueueLimit = 0,
+        QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+    }));
+
+    rateLimiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    rateLimiterOptions.AddSlidingWindowLimiter("sliding", options =>
+    {
+        options.Window = TimeSpan.FromSeconds(15);
+        options.PermitLimit = 5;
+        options.SegmentsPerWindow = 3;
+        options.QueueLimit = 0;
+    });
+
+    rateLimiterOptions.AddTokenBucketLimiter("token", options =>
+    {
+        options.TokenLimit = 100;
+        options.TokensPerPeriod = 10;
+        options.ReplenishmentPeriod = TimeSpan.FromSeconds(5);
+        options.QueueLimit = 0;
+    });
+
+    rateLimiterOptions.AddConcurrencyLimiter("concurrency", options =>
+    {
+        options.PermitLimit = 5;
+        options.QueueLimit = 0;
+    });
+});
 
 builder.Host.UseSerilog((context, config) =>
 {
@@ -101,9 +142,10 @@ app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
-//app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 app.MapControllers();
 

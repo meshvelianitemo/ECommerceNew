@@ -20,6 +20,7 @@ using ECommerceNew.Application.Results.Errors;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Sprache;
 
 namespace ECommerceNew.Controllers;
@@ -36,7 +37,7 @@ public class ProductsController : ControllerBase
         _sender = sender;
         _logger = logger;
     }
-
+    [EnableRateLimiting("token")]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<Result<ProductDetailDto>>> GetById(int id, CancellationToken cancellationToken)
     {
@@ -55,7 +56,7 @@ public class ProductsController : ControllerBase
 
         return Ok(new {success = true, value = result.Value});
     }
-
+    [EnableRateLimiting("token")]
     [HttpGet("All")]
     public async Task<ActionResult<ProductDetailDto>> GetAll([FromQuery] ProductQueryParameters queryParams , CancellationToken cancellationToken)
     {
@@ -74,6 +75,7 @@ public class ProductsController : ControllerBase
         return Ok(new {success = true , result.Value});
     }
     [Authorize]
+    [EnableRateLimiting("token")]
     [HttpGet("Wishlist")]
     public async Task<ActionResult<WishListDetailDto>> GetWishlist([FromQuery] WishlistQueryParameters queryParams, CancellationToken cancellationToken)
     {
@@ -95,6 +97,7 @@ public class ProductsController : ControllerBase
     }
 
     [Authorize]
+    [EnableRateLimiting("token")]
     [HttpGet("Cart/Items")]
     public async Task<ActionResult<CartItemDetailDto>> GetCartItems([FromQuery] CartItemsQueryParameters queryParams , CancellationToken cancellationToken)
     {
@@ -115,7 +118,7 @@ public class ProductsController : ControllerBase
         }
         return Ok(new { success = true, result.Value });
     }
-    
+    [EnableRateLimiting("token")]
     [HttpGet("GetImageUrls/{productId:int}")]
     public async Task<ActionResult<ProductImagesDto>> GetImageUrls(int productId, CancellationToken cancellationToken)
     {
@@ -137,6 +140,7 @@ public class ProductsController : ControllerBase
     }
 
     [Authorize(Roles ="Admin")]
+    [EnableRateLimiting("concurrency")]
     [HttpPost("Create")]
     public async Task<ActionResult<int>> Create([FromBody] CreateProductDto dto, CancellationToken cancellationToken)
     {
@@ -158,6 +162,7 @@ public class ProductsController : ControllerBase
     }
 
     [Authorize]
+    [EnableRateLimiting("sliding")]
     [HttpPost("Cart/Add")]
     public async Task<IActionResult> AddToCart([FromBody] AddToCartDto dto, CancellationToken cancellationToken)
     {
@@ -180,6 +185,7 @@ public class ProductsController : ControllerBase
     }
 
     [Authorize]
+    [EnableRateLimiting("sliding")]
     [HttpPost("Wishlist/Add")]
     public async Task<ActionResult> AddToWishlist([FromBody] AddToWishlistDto dto, CancellationToken cancellationToken)
     {
@@ -213,7 +219,8 @@ public class ProductsController : ControllerBase
     }
 
 
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("concurrency")]
     [HttpPost("UploadImage")]
     public async Task<IActionResult> UploadImage(UploadImageDto Dto, CancellationToken cancellationToken)
     {
@@ -254,72 +261,139 @@ public class ProductsController : ControllerBase
         }
     }
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("concurrency")]
     [HttpDelete("Delete")]
     public async Task<IActionResult> Delete([FromBody] DeleteProductDto dto, CancellationToken cancellationToken)
     {
         var result = await _sender.Send(new DeleteProductCommand(dto), cancellationToken);
 
-        if (result)
+        if (!result.IsSuccess)
         {
-            return NoContent();
+            return BadRequest(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
-        return BadRequest();
+        return Ok(new
+        {
+            success = true,
+            message = "the Product was successfully deleted."
+        });
         
     }
 
 
     [Authorize]
+    [EnableRateLimiting("sliding")]
     [HttpDelete("Wishlist/Remove")]
     public async Task<ActionResult> RemoveFromWishlist([FromBody] RemoveFromWishlistDto dto, CancellationToken cancellationToken)
     {
         var result = await _sender.Send(new RemoveFromWishlistCommand(dto), cancellationToken);
-        if (!result)
+        if (!result.IsSuccess)
         {
-            return BadRequest();
+            return BadRequest(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
-        return Ok("Product Removed From Wishlist.");
+        return Ok(new
+        {
+            success = true,
+            message = "Successfully removed from wishlist."
+        });
     }
 
-    //[Authorize]
+    [Authorize]
+    [EnableRateLimiting("sliding")]
     [HttpDelete("Cart/Remove")]
     public async Task<ActionResult> RemoveFromCart([FromBody] RemoveFromCartDto dto, CancellationToken cancellationToken)
     {
         var result = await _sender.Send(new RemoveFromCartCommand(dto), cancellationToken);
-        if (!result)
+        if (!result.IsSuccess)
         {
-            return BadRequest("Bad Request!");
+            return NotFound(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
-        return Ok("The item was sucessfully removed from cart!");
+        return Ok(new
+        {
+            success = true,
+            message = "Successfully removed from cart."
+        });
     }
 
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("concurrency")]
     [HttpDelete("DeleteImage")]
     public async Task<IActionResult> DeleteImage([FromBody] DeleteProductImageDto dto, CancellationToken cancellationToken)
     {
         _logger.LogInformation("the request came in with this values : {productId} , {Url}", dto.ProductId, dto.ImageKey);
         var result = await _sender.Send(new DeleteProductImageCommand(dto), cancellationToken);
-        if (result)
+        if (!result.IsSuccess)
         {
-            return NoContent();
+            return NotFound(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
-        return BadRequest();
+        return Ok(new
+        {
+            success = true,
+            message = "Image removed successfully."
+        });
     }
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("concurrency")]
     [HttpPut("Update")]
     public async Task<IActionResult> Update([FromBody] UpdateProductDto productDto, CancellationToken cancellationToken)
     {
         var result = await _sender.Send(new UpdateProductCommand(productDto));
 
-        if (result)
+        if (!result.IsSuccess)
         {
-            return NoContent();
+            return BadRequest(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
         }
-        return BadRequest();
+        return Ok(new
+        {
+            success = true,
+            message = "Product update successfully."
+        });
 
     }
-
-
-
 
 }
 

@@ -56,19 +56,25 @@ public class ProductRepository : IProductRepository
         return Result.Success();
     }
 
-    public async Task<bool> RemoveImageUrlAsync(int productId, string key, CancellationToken cancellationToken = default)
+    public async Task<Result> RemoveImageUrlAsync(int productId, string key, CancellationToken cancellationToken = default)
     {
+        var product = await _context.Products
+            .FirstOrDefaultAsync(p => p.ProductId == productId);
+        if (product == null)
+        {
+            return Result.Failure(ProductErrors.NotFound);
+        }
         var productImage =  await _context.ProductImages
             .FirstOrDefaultAsync(pi => pi.ProductId == productId && pi.ImagePath == key, cancellationToken);
         
         if (productImage == null)
         {
-            throw new ProductImageNotFoundException("The product image was not found!");
+            return Result.Failure(ProductErrors.ImageNotFound);
         }
 
         _context.ProductImages.Remove(productImage);
         await _context.SaveChangesAsync();
-        return true;
+        return Result.Success();
     }
 
     public Task DeleteAsync(Product productDto, CancellationToken cancellationToken = default)
@@ -178,15 +184,12 @@ public class ProductRepository : IProductRepository
 
     }
 
-    public async Task<bool> UpdateAsync(Product product, CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateAsync(Product product, CancellationToken cancellationToken = default)
     {
        
         var existing = await _context.Products
             .FirstOrDefaultAsync(e => e.ProductId == product.ProductId, cancellationToken);
-        if (existing == null)
-        {
-            throw new ProductNotFoundException($"Product with ID {product.ProductId} not found.");
-        }
+       
         existing.Name = product.Name;
         existing.Description = product.Description;
         existing.Price = product.Price;
@@ -194,7 +197,7 @@ public class ProductRepository : IProductRepository
         existing.ModifiedDate = product.ModifiedDate;
 
         await _context.SaveChangesAsync(cancellationToken);
-        return true;
+        return Result.Success();
     }
 
     public async Task<Result> AddToWishlist(int productId, int userId, CancellationToken cancellationToken = default)
@@ -231,7 +234,7 @@ public class ProductRepository : IProductRepository
         return Result.Success();
     }
 
-    public async Task<bool> RemoveWishListItem(int productId,int userId, CancellationToken cancellationToken = default)
+    public async Task<Result> RemoveWishListItem(int productId,int userId, CancellationToken cancellationToken = default)
     {
         var affectedRows  = await _context.WishListItems
             .Where(wli => wli.ProductId == productId && wli.UserId == userId)
@@ -239,10 +242,10 @@ public class ProductRepository : IProductRepository
 
         if (affectedRows == 0)
         {
-            throw new WishListItemNotFoundException();
+            return Result.Failure(ProductErrors.NotInWishlist);    
         }
 
-        return true;
+        return Result.Success();
     }
 
     public async Task<PagedResult<WishListDetailDto>> GetWishlistForUserAsync(
@@ -447,7 +450,7 @@ public class ProductRepository : IProductRepository
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     /// <exception cref="CartItemNotFoundException"></exception>
-    public async Task<bool> RemoveFromCart(int productId, int userId, CancellationToken cancellationToken = default)
+    public async Task<Result> RemoveFromCart(int productId, int userId, CancellationToken cancellationToken = default)
     {
         var affectedCartItems = await _context.CartItems
             .Where(ci => ci.ProductId== productId && ci.Cart.UserId == userId)
@@ -455,10 +458,10 @@ public class ProductRepository : IProductRepository
 
         if (affectedCartItems ==0)
         {
-            throw new CartItemNotFoundException();
+            return Result.Failure(ProductErrors.NotInCart);
         }
 
-        return true;
+        return Result.Success();
     }
 }
 

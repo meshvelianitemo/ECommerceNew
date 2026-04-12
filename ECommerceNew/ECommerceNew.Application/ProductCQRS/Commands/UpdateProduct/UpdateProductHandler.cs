@@ -1,12 +1,13 @@
 ﻿
 using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Responses.Exceptions;
+using ECommerceNew.Application.Results.Errors;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace ECommerceNew.Application.ProductCQRS.Commands.UpdateProduct
 {
-    public class UpdateProductHandler : IRequestHandler<UpdateProductCommand, bool>
+    public class UpdateProductHandler : IRequestHandler<UpdateProductCommand, Result>
     {
         private readonly ILogger<UpdateProductHandler> _logger;
         private readonly IProductRepository _productRepository;
@@ -16,7 +17,7 @@ namespace ECommerceNew.Application.ProductCQRS.Commands.UpdateProduct
             _productRepository = productRepository;
         }
 
-        public async Task<bool> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
         {
             var dto = request._Dto;
 
@@ -24,7 +25,7 @@ namespace ECommerceNew.Application.ProductCQRS.Commands.UpdateProduct
 
             if (product == null)
             {
-                throw new ProductNotFoundException($"Product with ID {dto.ProductId} not found.");
+                return Result.Failure(ProductErrors.NotFound);
             }
 
             product.Name = dto.Name;
@@ -33,10 +34,10 @@ namespace ECommerceNew.Application.ProductCQRS.Commands.UpdateProduct
             product.Amount = dto.Amount;
             product.ModifiedDate = DateTime.UtcNow;
 
-            await _productRepository.UpdateAsync(product, cancellationToken);
+            var result = await _productRepository.UpdateAsync(product, cancellationToken);
             _logger.LogInformation("Product with ProductId {0} is updated successfully.", dto.ProductId);
 
-            return true;
+            return result;
         }
     }
 }

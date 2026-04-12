@@ -1,10 +1,11 @@
 ﻿
 using ECommerceNew.Application.Abstractions;
+using ECommerceNew.Application.Results.Errors;
 using MediatR;
 
 namespace ECommerceNew.Application.ProductCQRS.Commands.RemoveFromCart
 {
-    public class RemoveFromCartHandler : IRequestHandler<RemoveFromCartCommand, bool>
+    public class RemoveFromCartHandler : IRequestHandler<RemoveFromCartCommand, Result>
     {
         private readonly IProductRepository _productRepository;
         public RemoveFromCartHandler(IProductRepository productRepository)
@@ -12,7 +13,7 @@ namespace ECommerceNew.Application.ProductCQRS.Commands.RemoveFromCart
             _productRepository = productRepository;
         }
 
-        public Task<bool> Handle(RemoveFromCartCommand request, CancellationToken cancellationToken)
+        public Task<Result> Handle(RemoveFromCartCommand request, CancellationToken cancellationToken)
         {
             var numberOfAffectedRows = _productRepository.RemoveFromCart(request._Dto.ProductId,
                 request._Dto.UserId,

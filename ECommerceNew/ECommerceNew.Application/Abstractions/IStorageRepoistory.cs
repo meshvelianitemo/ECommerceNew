@@ -8,6 +8,6 @@ namespace ECommerceNew.Application.Abstractions
     {
         Task<string> UploadFile( IFormFile file, CancellationToken cancelationToken);
         Task<Result<List<string?>>> GetImageUrl(int productId, CancellationToken cancelationToken);
-        Task<bool> DeleteImageAsync(string url, CancellationToken cancellationToken);
+        Task<Result> DeleteImageAsync(string url, CancellationToken cancellationToken);
     }
 }

@@ -8,6 +8,7 @@ using ECommerceNew.Application.Auth.Commands.VerifyRecoveryCode;
 using ECommerceNew.Application.Auth.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ECommerceNew.Api.Controllers
 {
@@ -23,7 +24,7 @@ namespace ECommerceNew.Api.Controllers
             _sender = sender;
             _tokenService = tokenService;
         }
-
+        [EnableRateLimiting("fixed")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
         {
@@ -53,7 +54,7 @@ namespace ECommerceNew.Api.Controllers
 
             return Ok(new { success = true, token = webToken });
         }
-
+        [EnableRateLimiting("fixed")]
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
         {
@@ -71,7 +72,7 @@ namespace ECommerceNew.Api.Controllers
             }
             return Ok(new { success = true , message = "To complete registration proceed to Email verification." , userId = result.Value.UserId });
         }
-
+        [EnableRateLimiting("fixed")]
         [HttpPost("VerifyEmail")]
         public async Task<IActionResult> VerifyEmail([FromBody] EmailVerificationDto request, CancellationToken cancellationToken)
         {
@@ -110,7 +111,7 @@ namespace ECommerceNew.Api.Controllers
             }
             return Ok(new {success = true, message = "Email verified successfully!" });
         }
-
+        [EnableRateLimiting("fixed")]
         [HttpPost("SendPasswordRecovery")]
         public async Task<IActionResult> SendPasswordRecovery([FromBody] PasswordRecoveryEmailDto request, CancellationToken cancellationToken)
         {
@@ -129,7 +130,7 @@ namespace ECommerceNew.Api.Controllers
             return Ok(new { success = true , message = "Password recovery email sent successfully!" });
 
         }
-
+        [EnableRateLimiting("fixed")]
         [HttpPost("VerifyPasswordRecoveryCode")]
         public async Task<IActionResult> VerifyPasswordRecoveryCode([FromBody] RecoveryCodeVerificationDto request, CancellationToken cancellationToken)
         {
@@ -147,7 +148,7 @@ namespace ECommerceNew.Api.Controllers
             }
             return Ok(new { success = true, message = "Verification code is valid!" });
         }
-
+        [EnableRateLimiting("fixed")]
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPassword([FromBody] PasswordResetDto request, CancellationToken cancellationToken)
         {

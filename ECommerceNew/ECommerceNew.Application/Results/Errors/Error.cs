@@ -27,9 +27,12 @@ namespace ECommerceNew.Application.Results.Errors
 
         public static readonly Error OutOfStock =
             new("Product.OutOfStock", "Product is out of stock", "Products");
-
+        // any image
         public static readonly Error ImagesNotFound =
             new("Product.ImagesNotFound", "No images found for this product", "Products");
+        // specific image
+        public static readonly Error ImageNotFound =
+            new("Product.ImageNotFound", "Image not found for this product", "Products");
 
         public static readonly Error AddToCartFailed =
             new("Product.AddToCartFailed", "Failed to add product to cart", "Products->Database");
@@ -37,6 +40,11 @@ namespace ECommerceNew.Application.Results.Errors
         public static readonly Error AlreadyInWishlist =
             new("Product.AlreadyInWishlist", "Product is already in the wishlist", "Products->Wishlist");
 
+        public static readonly Error NotInWishlist = 
+            new("Product.NotInWishlist", "Product is not in the wishlist", "Products->Wishlist");
+
+        public static readonly Error NotInCart =
+            new("Product.NotInCart", "Product is not in the cart", "Products->Cart");
     }
     
     public static class UserErrors
