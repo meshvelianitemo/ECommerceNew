@@ -1,6 +1,9 @@
 using Amazon.Runtime.Internal;
+using Amazon.S3;
+using APIMatic.Core.Request.Parameters;
 using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Auth.DTOs;
+using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
 using ECommerceNew.Application.Responses.Exceptions;
 using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Domain.Entities.ProductSide;
@@ -46,11 +49,52 @@ public class UserRepository : IUserRepository
 
     
 
-    public async Task<IReadOnlyList<User>> ListUsersAsync(CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<UserInfoDto>>> ListUsersAsync(UserQueryParameters queryParams, CancellationToken cancellationToken = default)
     {
-        return await _context.Users
-            .Include(u => u.Role)
+        var page = queryParams.Page ?? 1;
+        var pageSize = queryParams.PageSize ?? 20;
+
+        page = page <= 0 ? 1 : page;
+        pageSize = pageSize <= 0 ? 20 : pageSize;
+
+
+        var query = from U in _context.Users.AsNoTracking()
+                    select new UserInfoDto
+                    {
+
+                        CartId = U.Cart.CartId,
+                        UserId = U.UserId,
+                        RoleId = U.RoleId,
+                        FirstName = U.FirstName,
+                        LastName = U.LastName,
+                        Email = U.Email,
+                        IsActive = U.IsActive,
+                        CreatedAt = U.CreatedAt,
+                        UpdatedAt = U.UpdatedAt
+                    };
+
+        if (queryParams.IsActive.HasValue)
+        {
+            query = query.Where(p => p.IsActive == queryParams.IsActive.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        var value = new PagedResult<UserInfoDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+        };
+
+        return Result<PagedResult<UserInfoDto>>.Success(value);
     }
 
     public async Task<User?> AuthenticateUserAsync(string email, string password, CancellationToken cancellationToken = default)

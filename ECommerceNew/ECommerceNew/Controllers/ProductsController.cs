@@ -190,32 +190,35 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult> AddToWishlist([FromBody] AddToWishlistDto dto, CancellationToken cancellationToken)
     {
         var result = await _sender.Send(new AddToWishListCommand(dto), cancellationToken);
-        if (result.Error.Code == "Product.AlreadyInWishlist")
+        if (!result.IsSuccess)
         {
-            return Conflict(new {success = false,
-                error = new
+            if (result.Error != null && result.Error.Code == "Product.AlreadyInWishlist")
+            {
+                return Conflict(new
                 {
-                    code = result.Error.Code,
-                    message = result.Error.Message,
-                    field = result.Error.Field
-                }
-            });
-        }
-        else if (!result.IsSuccess)
-        {
+                    success = false,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
+            }
+
             return BadRequest(new
             {
                 success = false,
                 error = new
                 {
-                    code = result.Error.Code,
-                    message = result.Error.Message,
-                    field = result.Error.Field
+                    code = result.Error?.Code,
+                    message = result.Error?.Message,
+                    field = result.Error?.Field
                 }
             });
         }
 
-        return Ok("Product Added to Wishlist.");
+        return Ok(new { success = true, message = "Product Added to Wishlist." });
     }
 
 

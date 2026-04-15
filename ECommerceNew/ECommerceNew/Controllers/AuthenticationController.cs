@@ -6,6 +6,7 @@ using ECommerceNew.Application.Auth.Commands.PasswordRecoveryCode;
 using ECommerceNew.Application.Auth.Commands.UserRegister;
 using ECommerceNew.Application.Auth.Commands.VerifyRecoveryCode;
 using ECommerceNew.Application.Auth.DTOs;
+using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -24,6 +25,15 @@ namespace ECommerceNew.Api.Controllers
             _sender = sender;
             _tokenService = tokenService;
         }
+
+        //[EnableRateLimiting("fixed")]
+        //[HttpGet("users")]
+        //public async Task<IActionResult> GetUsers([FromQuery] UserQueryParameters queryParams, CancellationToken cancellationToken)
+        //{
+
+        //}
+
+
         [EnableRateLimiting("fixed")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)

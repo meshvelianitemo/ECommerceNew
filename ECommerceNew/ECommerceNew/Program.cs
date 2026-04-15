@@ -52,22 +52,22 @@ builder.Services.AddRateLimiter(rateLimiterOptions =>
     rateLimiterOptions.AddSlidingWindowLimiter("sliding", options =>
     {
         options.Window = TimeSpan.FromSeconds(15);
-        options.PermitLimit = 5;
-        options.SegmentsPerWindow = 3;
+        options.PermitLimit = 20;
+        options.SegmentsPerWindow = 10;
         options.QueueLimit = 0;
     });
 
     rateLimiterOptions.AddTokenBucketLimiter("token", options =>
     {
-        options.TokenLimit = 100;
-        options.TokensPerPeriod = 10;
+        options.TokenLimit = 300;
+        options.TokensPerPeriod = 30;
         options.ReplenishmentPeriod = TimeSpan.FromSeconds(5);
         options.QueueLimit = 0;
     });
 
     rateLimiterOptions.AddConcurrencyLimiter("concurrency", options =>
     {
-        options.PermitLimit = 5;
+        options.PermitLimit = 30;
         options.QueueLimit = 0;
     });
 });
