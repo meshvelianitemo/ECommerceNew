@@ -143,6 +143,22 @@ public class ProductRepository : IProductRepository
         else if (queryParams.Available == false)
             baseQuery = baseQuery.Where(p => p.Amount == 0);
 
+        if (!string.IsNullOrEmpty(queryParams.Sort))
+        {
+            baseQuery = queryParams.Sort.ToLower() switch
+            {
+                "price_asc" => baseQuery.OrderBy(p => p.Price),
+                "price_desc" => baseQuery.OrderByDescending(p => p.Price),
+                "newest" => baseQuery.OrderByDescending(p => p.CreationDate),
+
+                _ => baseQuery.OrderByDescending(p => p.CreationDate)
+            };
+        }
+        else
+        {
+            // default sort
+            baseQuery = baseQuery.OrderByDescending(p => p.CreationDate);
+        }
 
         // Get total count before pagination
         var totalCount = await baseQuery.CountAsync();
@@ -152,7 +168,6 @@ public class ProductRepository : IProductRepository
         var products = await baseQuery
             .Include(p => p.ProductImages)
             .Include(p => p.ProductCategory)
-            .OrderByDescending(p => p.CreationDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
