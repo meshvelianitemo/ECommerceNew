@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace ECommerceNew.Controllers;
 
 [ApiController]
-[Authorize(Roles ="Admin")]
+//[Authorize(Roles ="Admin")]
 [EnableRateLimiting("concurrency")]
 [Route("api/admin/products")]
 public class AdminProductsController : ControllerBase

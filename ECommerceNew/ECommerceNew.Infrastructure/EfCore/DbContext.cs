@@ -127,6 +127,8 @@ namespace ECommerceNew.Infrastructure.EfCore
                     entity.Property(e => e.Price)
                             .HasPrecision(18, 2)
                             .IsRequired();
+                    entity.Property(e => e.OriginalPrice)
+                            .HasPrecision(18, 2);
                     entity.Property(e => e.Amount)
                             .IsRequired();
                     entity.HasOne(p => p.User)

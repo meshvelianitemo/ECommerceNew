@@ -129,8 +129,8 @@ public class ProductRepository : IProductRepository
         }
 
 
-        if (queryParams.CategoryId.HasValue && queryParams.CategoryId > 0)
-            baseQuery = baseQuery.Where(p => p.CategoryId == queryParams.CategoryId);
+        if (queryParams.CategoryId != null && queryParams.CategoryId?.Any() == true)
+            baseQuery = baseQuery.Where(p => queryParams.CategoryId.Contains(p.CategoryId));
 
         if (queryParams.MinPrice.HasValue)
             baseQuery = baseQuery.Where(p => p.Price >= queryParams.MinPrice);
@@ -178,6 +178,7 @@ public class ProductRepository : IProductRepository
             Name = p.Name,
             Description = p.Description,
             Price = p.Price,
+            OriginalPrice = p.OriginalPrice,
             Amount = p.Amount,
             imageUrl = p.ProductImages
                 .Select(i => $"https://{_bucketName}.s3.{_region}.amazonaws.com/{i.ImagePath}")
@@ -286,6 +287,7 @@ public class ProductRepository : IProductRepository
                         ProductName = p.Name,
                         ProductDescription = p.Description,
                         Price = p.Price,
+                        OriginalPrice = p.OriginalPrice,
                         imageUrls = p.ProductImages
                         .Select(i => $"https://{_bucketName}.s3.{_region}.amazonaws.com/{i.ImagePath}")
                         .ToList(),
@@ -355,6 +357,7 @@ public class ProductRepository : IProductRepository
                         ProductName = p.Name,
                         ProductDescription = p.Description,
                         Price = p.Price,
+                        OriginalPrice = p.OriginalPrice,
                         imageUrls = p.ProductImages
                         .Select(i => $"https://{_bucketName}.s3.{_region}.amazonaws.com/{i.ImagePath}")
                         .ToList(),

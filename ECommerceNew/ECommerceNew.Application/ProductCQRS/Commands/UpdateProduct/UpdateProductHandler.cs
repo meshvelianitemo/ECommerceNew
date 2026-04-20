@@ -31,6 +31,7 @@ namespace ECommerceNew.Application.ProductCQRS.Commands.UpdateProduct
             product.Name = dto.Name;
             product.Description = dto.Description;
             product.Price = dto.Price;
+            product.OriginalPrice = dto.OriginalPrice;
             product.Amount = dto.Amount;
             product.ModifiedDate = DateTime.UtcNow;
 

@@ -27,6 +27,7 @@ public class CreateProductHandler : IRequestHandler<CreateProductCommand, Result
             Name = dto.Name,
             Description = dto.Description,
             Price = dto.Price,
+            OriginalPrice = dto.OriginalPrice,
             Amount = dto.Amount,
             CategoryId = dto.CategoryId,
             UserId = dto.UserId,
