@@ -1,0 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --font-display: 'Montserrat', system-ui, sans-serif;
+  --font-sans: 'Open Sans', system-ui, sans-serif;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #F5F1E3;
+  color: #2C2C2C;
+  line-height: 1.6;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C8C2B0; border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: #2C2C2C; }
+
+/* Selection */
+::selection { background: #BC2C2C; color: #F5F1E3; }
+
+/* Focus ring — buttons, links etc. only; inputs manage their own focus styles */
+:focus-visible {
+  outline: 2px solid #2C2C2C;
+  outline-offset: 2px;
+  border-radius: 0;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+/* Shimmer skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #e8e2d3 25%, #f0ead9 50%, #e8e2d3 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+/* Grayscale image — color reveals on card hover */
+.retro-img {
+  filter: grayscale(100%);
+  transition: filter 500ms ease-in-out;
+}
+.group:hover .retro-img {
+  filter: grayscale(0%);
+}
+
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+}
+
+@layer components {
+  /* Floating label input */
+  .input-floating {
+    @apply relative w-full;
+  }
+  .input-floating input,
+  .input-floating textarea {
+    @apply w-full pt-6 pb-2 px-0 bg-transparent border-0 border-b-2 border-[#2C2C2C]
+           text-[#2C2C2C] placeholder-transparent focus:outline-none focus:border-[#BC2C2C]
+           transition-colors duration-200;
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+  }
+  .input-floating label {
+    @apply absolute left-0 top-2 text-[10px] text-[#888] font-semibold tracking-widest uppercase
+           pointer-events-none transition-all duration-200;
+    font-family: var(--font-sans);
+    letter-spacing: 0.1em;
+  }
+  .input-floating input:placeholder-shown + label,
+  .input-floating textarea:placeholder-shown + label {
+    @apply top-4 text-sm normal-case tracking-normal font-normal text-[#888];
+    letter-spacing: 0;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#2C2C2C] text-white
+           font-semibold text-[11px] uppercase rounded-none
+           transition-all duration-200 hover:bg-[#BC2C2C] active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    font-family: var(--font-sans);
+    letter-spacing: 0.1em;
+  }
+
+  /* Secondary / ghost button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-transparent
+           border-2 border-[#2C2C2C] text-[#2C2C2C] font-semibold text-[11px] uppercase rounded-none
+           transition-all duration-200 hover:bg-[#2C2C2C] hover:text-white active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    font-family: var(--font-sans);
+    letter-spacing: 0.1em;
+  }
+
+  /* Ghost icon button */
+  .btn-icon {
+    @apply inline-flex items-center justify-center w-10 h-10 rounded-none
+           text-[#2C2C2C] transition-all duration-150
+           hover:bg-[#2C2C2C] hover:text-white active:scale-95;
+  }
+
+  /* Product card */
+  .product-card {
+    @apply bg-white border border-[#2C2C2C] transition-all duration-300;
+  }
+  .product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0 #2C2C2C;
+  }
+
+  /* Badge */
+  .badge-count {
+    @apply absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-white text-[#BC2C2C]
+           text-[8px] font-black rounded-none flex items-center justify-center px-1;
+    font-family: var(--font-sans);
+  }
+
+  /* Section heading */
+  .heading-display {
+    @apply font-display font-black text-[#2C2C2C] uppercase;
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+  }
+}
+
+/* Dual-range price slider */
+.price-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  height: 100%;
+  background: transparent;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+}
+.price-slider::-webkit-slider-runnable-track {
+  background: transparent;
+}
+.price-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #BC2C2C;
+  border: 2px solid #2C2C2C;
+  cursor: pointer;
+  pointer-events: all;
+}
+.price-slider::-moz-range-track {
+  background: transparent;
+  border: none;
+}
+.price-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #BC2C2C;
+  border: 2px solid #2C2C2C;
+  cursor: pointer;
+  pointer-events: all;
+  border-radius: 0;
+}
