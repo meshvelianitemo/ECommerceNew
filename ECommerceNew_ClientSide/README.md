@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:1a2a1a,100:0f3d0f&height=180&section=header&text=EkkoShop&fontSize=42&fontColor=e6edf3&fontAlignY=40&desc=Full-stack%20tech%20e-commerce%20built%20with%20Next.js&descAlignY=60&descColor=7d8590" />
-
 ![TypeScript](https://img.shields.io/badge/TypeScript-0d1117?style=for-the-badge&logo=typescript&logoColor=58a6ff)
 ![Next.js](https://img.shields.io/badge/Next.js-0d1117?style=for-the-badge&logo=nextdotjs&logoColor=e6edf3)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-0d1117?style=for-the-badge&logo=tailwindcss&logoColor=06b6d4)
@@ -23,16 +21,6 @@ EkkoShop is a tech-focused e-commerce storefront built with a modern React stack
 - **Utility layer** — shared helpers and config in `/lib`
 - **Responsive UI** — mobile-first layout with Tailwind CSS
 - **App Router** — built on Next.js 14 App Router architecture
-
-## Tech Stack
-
-| Layer | Tech |
-|-------|------|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| State Management | Zustand |
-| Deployment | Vercel (frontend) |
 
 ## Project Structure
 
