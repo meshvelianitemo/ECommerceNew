@@ -3,7 +3,6 @@ using Amazon.S3.Model;
 using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Results.Errors;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 

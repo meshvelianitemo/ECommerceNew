@@ -4,13 +4,6 @@ using ECommerceNew.Application.Reviews.DTOs;
 using ECommerceNew.Domain.Entities.ProductSide;
 using ECommerceNew.Infrastructure.EfCore;
 using Microsoft.EntityFrameworkCore;
-using PaypalServerSdk.Standard.Models;
-using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ECommerceNew.Infrastructure.Repositories
 {
@@ -33,7 +26,7 @@ namespace ECommerceNew.Infrastructure.Repositories
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-        public async Task<Result> CreateReview(CreateReviewDto dto)
+        public async Task<Result> CreateReview(CreateReviewDto dto, CancellationToken cancellationToken)
         {
             var existingProduct = await _productRepository
                 .GetByIdAsync(dto.ProductId);
@@ -67,7 +60,7 @@ namespace ECommerceNew.Infrastructure.Repositories
         /// </summary>
         /// <param name="reviewId"></param>
         /// <returns></returns>
-        public async Task<Result> DeleteReview(int reviewId)
+        public async Task<Result> DeleteReview(int reviewId, CancellationToken cancellationToken)
         {
             var review = await _context.Reviews
                 .Where(r => r.ReviewId == reviewId)
@@ -78,6 +71,7 @@ namespace ECommerceNew.Infrastructure.Repositories
             }
 
             _context.Reviews.Remove(review);
+            await _context.SaveChangesAsync();
             return Result.Success();
         }
 
@@ -86,17 +80,17 @@ namespace ECommerceNew.Infrastructure.Repositories
         /// </summary>
         /// <param name="reviewId"></param>
         /// <returns></returns>
-        public async Task<Result<ReviewsForProduct>> GetReview(int reviewId)
+        public async Task<Result<ReviewDto>> GetReview(int reviewId, CancellationToken cancellationToken)
         {
             var review = await _context.Reviews
                 .Where(r => r.ReviewId == reviewId)
                 .FirstOrDefaultAsync();
             if (review == null)
             {
-                return Result<ReviewsForProduct>
+                return Result<ReviewDto>
                     .Failure(ReviewErrors.ReviewNotFound);
             }
-            var reviewData = new ReviewsForProduct
+            var reviewData = new ReviewDto
             {
                 ReviewId = review.ReviewId,
                 ProductId = review.ProductId,
@@ -106,17 +100,62 @@ namespace ECommerceNew.Infrastructure.Repositories
                 CreatedAt = review.CreatedAt
             };
 
-            return Result<ReviewsForProduct>.Success(reviewData);
+            return Result<ReviewDto>.Success(reviewData);
         }
 
-        public Task<Result<ReviewsForProduct>> GetReviewsForProduct(int productId)
+        /// <summary>
+        /// this will return a list of all reviews for a specific product 
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <returns></returns>
+        public async Task<Result<ReviewsForProduct>> GetReviewsForProduct(int productId, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var existingProduct = await _productRepository
+                .GetByIdAsync(productId);
+            if (existingProduct == null)
+            {
+                return Result<ReviewsForProduct>.Failure(ProductErrors.NotFound);
+            }
+            var rawReviews = await _context.Reviews
+                .Where(r => r.ProductId == productId)
+                .ToListAsync();
+
+            var reviews = new ReviewsForProduct();
+
+            reviews.Reviews = rawReviews.Select(r => new ReviewDto
+            {
+                ReviewId = r.ReviewId,
+                ProductId = r.ProductId,
+                UserId = r.UserId,
+                Rating = r.Rating,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt
+            }).ToList();
+
+            return Result<ReviewsForProduct>.Success(reviews);
         }
 
-        public Task<Result> UpdateReview(UpdateReviewDto dto)
+        /// <summary>
+        /// Update Review record
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public async Task<Result> UpdateReview(UpdateReviewDto dto, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var review = await _context.Reviews
+                .Where(r => r.ReviewId == dto.ReviewId)
+                .FirstOrDefaultAsync();
+
+            if (review == null)
+            {
+                return Result.Failure(ReviewErrors.ReviewNotFound);
+            }
+
+            review.Rating = dto.Rating;
+            review.Comment = dto.Comment;
+            review.CreatedAt = dto.CreatedAt;
+            await _context.SaveChangesAsync();
+            return Result.Success();
         }
 
     }

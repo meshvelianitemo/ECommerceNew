@@ -20,6 +20,7 @@ namespace ECommerceNew.Infrastructure
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IStorageRepoistory, StorageRepository>();
             services.AddTransient<IEmailService, SmtpEmailService>();
+            services.AddScoped<IReviewRepository, ReviewRepository>();
             services.AddSingleton(sp =>
             {
                 var config = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();

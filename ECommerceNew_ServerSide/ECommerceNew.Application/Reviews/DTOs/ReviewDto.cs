@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ECommerceNew.Application.Reviews.DTOs
 {
-    public class ReviewsForProduct
+    public class ReviewDto
     {
         public int ReviewId { get; set; }
         public int ProductId { get; set; }

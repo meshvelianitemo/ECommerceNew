@@ -24,8 +24,4 @@
     <ProjectReference Include="..\ECommerceNew.Domain\ECommerceNew.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Reviews\Queries\" />
-  </ItemGroup>
-
 </Project>
