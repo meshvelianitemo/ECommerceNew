@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="UserCQRS\**" />
+    <EmbeddedResource Remove="UserCQRS\**" />
+    <None Remove="UserCQRS\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.19" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
@@ -20,7 +26,6 @@
 
   <ItemGroup>
     <Folder Include="Reviews\Queries\" />
-    <Folder Include="UserCQRS\" />
   </ItemGroup>
 
 </Project>

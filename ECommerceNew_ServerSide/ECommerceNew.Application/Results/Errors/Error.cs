@@ -80,4 +80,10 @@ namespace ECommerceNew.Application.Results.Errors
             new("Admin.CouldntRetrieveUsers", "Could not retrieve users", "Users -> Admin");
     }
 
+    public static class ReviewErrors
+    {
+        public static readonly Error ReviewNotFound =
+            new("Review.ReviewNotFound", "Couldnt retrieve review", "Review -> Client");
+    }
+
 }
