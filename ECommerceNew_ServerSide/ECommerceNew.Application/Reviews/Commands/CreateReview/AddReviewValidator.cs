@@ -1,7 +1,7 @@
 ﻿using ECommerceNew.Application.Reviews.DTOs;
 using FluentValidation;
 
-namespace ECommerceNew.Application.Reviews.Commands
+namespace ECommerceNew.Application.Reviews.Commands.CreateReview
 {
     public class AddReviewValidator : AbstractValidator<CreateReviewDto>
     {

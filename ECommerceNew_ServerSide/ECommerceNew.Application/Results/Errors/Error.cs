@@ -84,6 +84,10 @@ namespace ECommerceNew.Application.Results.Errors
     {
         public static readonly Error ReviewNotFound =
             new("Review.ReviewNotFound", "Couldnt retrieve review", "Review -> Client");
+        public static readonly Error ReviewOnDifferentProduct =
+            new("Review.ReviewOnDifferentProduct", "Review belongs to different product", "Review -> Client");
+        public static readonly Error ReviewByDifferentUser =
+            new("Review.ReviewByDifferentUser", "Review was created by different user", "Review -> Client");
     }
 
 }
