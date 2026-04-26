@@ -1,5 +1,6 @@
 ﻿using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Reviews.Commands.CreateReview;
+using ECommerceNew.Application.Reviews.Commands.DeleteReview;
 using ECommerceNew.Application.Reviews.Commands.UpdateReview;
 using ECommerceNew.Application.Reviews.DTOs;
 using ECommerceNew.Application.Reviews.Queries.GetReview;
@@ -67,7 +68,7 @@ namespace ECommerceNew.Api.Controllers.Reviews
             }
             return Ok(new { success = result.IsSuccess, value = result.Value });
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> CreateReview(CreateReviewDto request, CancellationToken cancellationToken)
         {
@@ -88,7 +89,7 @@ namespace ECommerceNew.Api.Controllers.Reviews
             return Ok(new { success = result.IsSuccess, message = "Review created successfully" });
         }
 
-        [HttpPut()]
+        [HttpPut]
         public async Task<IActionResult> UpdateReview(UpdateReviewDto request, CancellationToken cancellationToken)
         {
             var result = await _sender.Send(new UpdateReviewCommand(request), cancellationToken);
@@ -108,7 +109,24 @@ namespace ECommerceNew.Api.Controllers.Reviews
             return Ok(new { success = result.IsSuccess, message = "Review updated successfully" });
         }
 
-        //[HttpDelete("{id}")]
-        //// delete review
+        [HttpDelete]
+        public async Task<IActionResult> DeleteReview(DeleteReviewDto request, CancellationToken cancellationToken)
+        {
+            var result = await _sender.Send(new DeleteReviewCommand(request), cancellationToken);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new
+                {
+                    success = result.IsSuccess,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
+            }
+            return Ok(new { success = result.IsSuccess, message = "Review deleted successfully" });
+        }
     }
 }

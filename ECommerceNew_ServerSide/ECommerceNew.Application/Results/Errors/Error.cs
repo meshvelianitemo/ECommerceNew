@@ -88,6 +88,8 @@ namespace ECommerceNew.Application.Results.Errors
             new("Review.ReviewOnDifferentProduct", "Review belongs to different product", "Review -> Client");
         public static readonly Error ReviewByDifferentUser =
             new("Review.ReviewByDifferentUser", "Review was created by different user", "Review -> Client");
+        public static readonly Error DuplicateReview =
+            new("Review.DuplicateReview", "User has already reviewed this product", "Review -> Database");
     }
 
 }

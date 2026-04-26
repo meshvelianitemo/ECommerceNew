@@ -17,14 +17,20 @@ namespace ECommerceNew.Application.Reviews.Commands.UpdateReview
         }
         public async Task<Result> Handle(UpdateReviewCommand request, CancellationToken cancellationToken)
         {
-            var review = await _reviewRepository
+            var reviewResult = await _reviewRepository
                 .GetReview(request.dto.ReviewId, cancellationToken);
-            if(review.Value.ProductId == request.dto.ProductId)
+
+            if (!reviewResult.IsSuccess)
+            {
+                return reviewResult;
+            }
+
+            if(reviewResult.Value.ProductId != request.dto.ProductId)
             {
                 return Result.Failure(ReviewErrors.ReviewOnDifferentProduct);
             }
 
-            if(review.Value.UserId != request.dto.UserId)
+            if(reviewResult.Value.UserId != request.dto.UserId)
             {
                 return Result.Failure(ReviewErrors.ReviewByDifferentUser);
             }

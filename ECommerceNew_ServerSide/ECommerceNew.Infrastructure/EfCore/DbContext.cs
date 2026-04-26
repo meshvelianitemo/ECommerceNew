@@ -235,6 +235,8 @@ namespace ECommerceNew.Infrastructure.EfCore
                           .IsRequired();
                     entity.Property(e => e.Comment)
                           .HasMaxLength(1000);
+                    entity.HasIndex(r => new { r.UserId, r.ProductId })
+                          .IsUnique();
                     entity.HasOne(r => r.Product)
                           .WithMany(p => p.Reviews)
                           .HasForeignKey(r => r.ProductId)

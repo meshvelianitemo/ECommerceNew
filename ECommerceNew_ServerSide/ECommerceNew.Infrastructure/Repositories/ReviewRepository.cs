@@ -50,7 +50,14 @@ namespace ECommerceNew.Infrastructure.Repositories
                 CreatedAt = DateTime.UtcNow,
             };
             await _context.Reviews.AddAsync(review);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return Result.Failure(ReviewErrors.DuplicateReview);
+            }
 
             return Result.Success();
         }
@@ -83,8 +90,7 @@ namespace ECommerceNew.Infrastructure.Repositories
         public async Task<Result<ReviewDto>> GetReview(int reviewId, CancellationToken cancellationToken)
         {
             var review = await _context.Reviews
-                .Where(r => r.ReviewId == reviewId)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(r => r.ReviewId == reviewId);
             if (review == null)
             {
                 return Result<ReviewDto>
