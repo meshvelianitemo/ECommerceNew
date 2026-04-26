@@ -9,11 +9,9 @@ namespace ECommerceNew.Application.Reviews.Commands.UpdateReview
     public class UpdateReviewHandler : IRequestHandler<UpdateReviewCommand, Result>
     {
         private readonly IReviewRepository _reviewRepository;
-        private readonly IProductRepository _productRepository;
-        public UpdateReviewHandler(IReviewRepository reviewRepository, IProductRepository productRepository)
+        public UpdateReviewHandler(IReviewRepository reviewRepository)
         {
             _reviewRepository = reviewRepository;
-            _productRepository = productRepository;
         }
         public async Task<Result> Handle(UpdateReviewCommand request, CancellationToken cancellationToken)
         {

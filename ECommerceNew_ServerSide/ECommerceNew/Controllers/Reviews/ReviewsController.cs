@@ -14,7 +14,6 @@ namespace ECommerceNew.Api.Controllers.Reviews
 {
     [Route("api/[controller]")]
     [EnableRateLimiting("token")]
-    //[Authorize]
     [ApiController]
     public class ReviewsController : ControllerBase
     {
@@ -69,6 +68,7 @@ namespace ECommerceNew.Api.Controllers.Reviews
             return Ok(new { success = result.IsSuccess, value = result.Value });
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateReview(CreateReviewDto request, CancellationToken cancellationToken)
         {
@@ -88,7 +88,7 @@ namespace ECommerceNew.Api.Controllers.Reviews
             }
             return Ok(new { success = result.IsSuccess, message = "Review created successfully" });
         }
-
+        [Authorize]
         [HttpPut]
         public async Task<IActionResult> UpdateReview(UpdateReviewDto request, CancellationToken cancellationToken)
         {
@@ -108,7 +108,7 @@ namespace ECommerceNew.Api.Controllers.Reviews
             }
             return Ok(new { success = result.IsSuccess, message = "Review updated successfully" });
         }
-
+        [Authorize]
         [HttpDelete]
         public async Task<IActionResult> DeleteReview(DeleteReviewDto request, CancellationToken cancellationToken)
         {
