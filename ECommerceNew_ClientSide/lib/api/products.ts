@@ -4,7 +4,6 @@ import type {
   PaginatedResponse,
   WishlistItem,
   CartItem,
-  ImageUrlsResponse,
   MessageResponse,
   CreateProductResponse,
   ProductsQuery,
@@ -24,7 +23,7 @@ export async function getAllProducts(
   return apiRequest(`/api/Products/All${buildQuery(query as unknown as Record<string, string | number | boolean | number[] | undefined>)}`)
 }
 
-export async function getImageUrls(productId: number): Promise<ImageUrlsResponse> {
+export async function getImageUrls(productId: number): Promise<{ success: true; urls: string[] }> {
   return apiRequest(`/api/Products/GetImageUrls/${productId}`)
 }
 
@@ -100,6 +99,7 @@ export async function updateProduct(data: {
   name: string
   description: string
   price: number
+  originalPrice?: number | null
   amount: number
   userId: number
   modifiedDate: string
