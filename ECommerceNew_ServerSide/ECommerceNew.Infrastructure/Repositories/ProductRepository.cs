@@ -205,10 +205,13 @@ public class ProductRepository : IProductRepository
        
         var existing = await _context.Products
             .FirstOrDefaultAsync(e => e.ProductId == product.ProductId, cancellationToken);
-       
+
+        //var temp = existing.Price;
+
         existing.Name = product.Name;
         existing.Description = product.Description;
         existing.Price = product.Price;
+        existing.OriginalPrice = product.OriginalPrice;
         existing.Amount = product.Amount;
         existing.ModifiedDate = product.ModifiedDate;
 

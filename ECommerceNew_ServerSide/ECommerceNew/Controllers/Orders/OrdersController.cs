@@ -1,9 +1,6 @@
-﻿using ECommerceNew.Api.Controllers.Reviews;
-using ECommerceNew.Application.Abstractions;
+﻿using ECommerceNew.Application.Abstractions;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ECommerceNew.Api.Controllers.Orders
 {
@@ -12,9 +9,8 @@ namespace ECommerceNew.Api.Controllers.Orders
     public class OrdersController : ControllerBase
     {
         private readonly ISender _sender;
-        private readonly ILogger<ReviewsController> _logger;
-        private readonly 
-        public OrdersController(ISender sender, ILogger<ReviewsController> logger, IReviewRepository reviewRepository)
+        private readonly ILogger<OrdersController> _logger;
+        public OrdersController(ISender sender, ILogger<OrdersController> logger, IReviewRepository reviewRepository)
         {
             _logger = logger;
             _sender = sender;

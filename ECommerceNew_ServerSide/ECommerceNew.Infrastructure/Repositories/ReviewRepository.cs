@@ -123,6 +123,7 @@ namespace ECommerceNew.Infrastructure.Repositories
                 return Result<ReviewsForProduct>.Failure(ProductErrors.NotFound);
             }
             var rawReviews = await _context.Reviews
+                .Include(r => r.User) 
                 .Where(r => r.ProductId == productId)
                 .ToListAsync();
 
@@ -132,6 +133,7 @@ namespace ECommerceNew.Infrastructure.Repositories
             {
                 ReviewId = r.ReviewId,
                 ProductId = r.ProductId,
+                Author = $"{r.User.FirstName} {r.User.LastName}",
                 UserId = r.UserId,
                 Rating = r.Rating,
                 Comment = r.Comment,

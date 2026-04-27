@@ -9,6 +9,7 @@ namespace ECommerceNew.Application.Reviews.DTOs
     public class ReviewDto
     {
         public int ReviewId { get; set; }
+        public string Author { get; set; } = string.Empty;
         public int ProductId { get; set; }
         public int UserId { get; set; }
         public int Rating { get; set; }
