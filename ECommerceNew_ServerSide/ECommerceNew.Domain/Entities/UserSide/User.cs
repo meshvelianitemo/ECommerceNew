@@ -1,4 +1,5 @@
-﻿using ECommerceNew.Domain.Entities.ProductSide;
+﻿using ECommerceNew.Domain.Entities.Commerce;
+using ECommerceNew.Domain.Entities.ProductSide;
 namespace ECommerceNew.Domain.Entities.UserSide
 {
     public class User
@@ -20,5 +21,6 @@ namespace ECommerceNew.Domain.Entities.UserSide
         public Cart Cart { get; set; }
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<WishListItem> WishListItems { get; set; } = new List<WishListItem>();
+        public ICollection<Order> Orders { get; set; } = new List<Order>();
     }
 }

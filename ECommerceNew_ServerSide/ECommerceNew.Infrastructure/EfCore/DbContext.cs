@@ -1,4 +1,5 @@
-﻿using ECommerceNew.Domain.Entities.ProductSide;
+﻿using ECommerceNew.Domain.Entities.Commerce;
+using ECommerceNew.Domain.Entities.ProductSide;
 using ECommerceNew.Domain.Entities.StoreInfo;
 using ECommerceNew.Domain.Entities.UserSide;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,10 @@ namespace ECommerceNew.Infrastructure.EfCore
         public DbSet<Cart> Carts { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<WishListItem> WishListItems { get; set; }
+
+        //Commerce
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
 
         //Store Info
         public DbSet<StoreInfo> StoreInfos { get; set; }
@@ -276,6 +281,55 @@ namespace ECommerceNew.Infrastructure.EfCore
                           .OnDelete(DeleteBehavior.NoAction);
                     entity.Property(ci => ci.ItemQuantity)
                           .IsRequired();
+                });
+
+
+                modelBuilder.Entity<Order>(entity =>
+                {
+                    entity.HasKey(e => e.Id);
+                    entity.Property(e => e.PhoneNumber)
+                          .IsRequired()
+                          .HasMaxLength(20);
+                    entity.Property(e => e.Address)
+                            .IsRequired()
+                            .HasMaxLength(500);
+                    entity.HasOne(e => e.User)
+                          .WithMany(u => u.Orders)
+                          .HasForeignKey(e => e.UserId)
+                          .OnDelete(DeleteBehavior.NoAction);
+
+                    entity.Property(e => e.Status)
+                          .IsRequired()
+                          .HasConversion<int>();
+
+                    entity.Property(e => e.OrderDate)
+                          .IsRequired();
+
+                    entity.HasMany(e => e.OrderItems)
+                          .WithOne(e => e.Order)
+                          .HasForeignKey(e => e.OrderId)
+                          .OnDelete(DeleteBehavior.Cascade);
+                });
+
+                modelBuilder.Entity<OrderItem>(entity =>
+                {
+                    entity.HasKey(e => e.Id);
+
+                    entity.Property(e => e.Quantity)
+                          .IsRequired();
+
+                    entity.Property(e => e.UnitPrice)
+                          .HasPrecision(18, 2)
+                          .IsRequired();
+
+                    entity.Property(e => e.TotalPrice)
+                          .HasPrecision(18, 2)
+                          .IsRequired();
+
+                    entity.HasOne(e => e.Order)
+                          .WithMany(e => e.OrderItems)
+                          .HasForeignKey(e => e.OrderId)
+                          .OnDelete(DeleteBehavior.Cascade);
                 });
             });
         }

@@ -4,6 +4,7 @@ using ECommerceNew.Infrastructure.EfCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerceNew.Infrastructure.Migrations
 {
     [DbContext(typeof(ECommerceDbContext))]
-    partial class ECommerceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260428081950_AddedOrderAndOrderItem")]
+    partial class AddedOrderAndOrderItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,30 +33,15 @@ namespace ECommerceNew.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Orders");
+                    b.ToTable("Order");
                 });
 
             modelBuilder.Entity("ECommerceNew.Domain.Entities.Commerce.OrderItem", b =>
@@ -85,7 +73,7 @@ namespace ECommerceNew.Infrastructure.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItem");
                 });
 
             modelBuilder.Entity("ECommerceNew.Domain.Entities.ProductSide.Cart", b =>
@@ -653,17 +641,6 @@ namespace ECommerceNew.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ECommerceNew.Domain.Entities.Commerce.Order", b =>
-                {
-                    b.HasOne("ECommerceNew.Domain.Entities.UserSide.User", "User")
-                        .WithMany("Orders")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("ECommerceNew.Domain.Entities.Commerce.OrderItem", b =>
                 {
                     b.HasOne("ECommerceNew.Domain.Entities.Commerce.Order", "Order")
@@ -819,8 +796,6 @@ namespace ECommerceNew.Infrastructure.Migrations
                 {
                     b.Navigation("Cart")
                         .IsRequired();
-
-                    b.Navigation("Orders");
 
                     b.Navigation("Products");
 
