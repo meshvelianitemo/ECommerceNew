@@ -305,6 +305,10 @@ namespace ECommerceNew.Infrastructure.EfCore
                     entity.Property(e => e.OrderDate)
                           .IsRequired();
 
+                    entity.Property(e => e.TotalAmount)
+                          .HasPrecision(18, 2)
+                          .IsRequired();
+
                     entity.HasMany(e => e.OrderItems)
                           .WithOne(e => e.Order)
                           .HasForeignKey(e => e.OrderId)

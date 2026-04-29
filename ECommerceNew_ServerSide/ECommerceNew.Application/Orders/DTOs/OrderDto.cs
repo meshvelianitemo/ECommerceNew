@@ -1,18 +1,17 @@
 ﻿
 using ECommerceNew.Domain.enums;
 
-namespace ECommerceNew.Domain.Entities.Commerce
+namespace ECommerceNew.Application.Orders.DTOs
 {
-    public class Order
+    public class OrderDto
     {
-        public int Id { get; set; }
+        public int OrderId { get; set; }
         public int UserId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
         public OrderStatus Status { get; set; }
         public DateTime OrderDate { get; set; } = DateTime.Now;
-        public decimal TotalAmount { get; set; }
-        public ICollection<OrderItem> OrderItems { get; set; }
-        public UserSide.User User { get; set; }
     }
 }
