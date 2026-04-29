@@ -26,17 +26,7 @@ namespace ECommerceNew.Application.Orders.Queries
             var orders = await _orderRepository
                 .GetOrdersAsync(request.filter);
             
-            return Result<List<OrderDto>>.Success(orders.Select(o => new OrderDto
-            {
-                OrderId = o.OrderId,
-                UserId = o.UserId,
-                CustomerName = o.CustomerName,
-                TotalAmount = o.TotalAmount,
-                Status = o.Status,
-                OrderDate = o.OrderDate,
-                PhoneNumber = o.PhoneNumber,
-                Address = o.Address
-            }).ToList());
+            return Result<List<OrderDto>>.Success(orders);
 
         }
     }

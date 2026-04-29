@@ -45,13 +45,14 @@ namespace ECommerceNew.Infrastructure.Repositories
                 {
                     OrderId = o.Id,
                     UserId = o.UserId,
-                    CustomerName = o.User.FirstName + o.User.LastName,
+                    CustomerName = o.User.FirstName + " " + o.User.LastName,
                     TotalAmount = o.TotalAmount,
                     Status = o.Status,
                     OrderDate = o.OrderDate,
                     PhoneNumber = o.PhoneNumber,
                     Address = o.Address
                 })
+                .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }
     }
