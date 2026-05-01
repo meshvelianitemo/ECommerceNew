@@ -121,7 +121,8 @@ namespace ECommerceNew.Infrastructure.EfCore
 
 
                 modelBuilder.Entity<Product>(entity =>
-                {
+                {   entity.HasQueryFilter(p => p.IsAvailable);
+
                     entity.HasKey(entity => entity.ProductId);
                     entity.Property(e => e.Name)
                           .IsRequired()
@@ -136,6 +137,9 @@ namespace ECommerceNew.Infrastructure.EfCore
                             .HasPrecision(18, 2);
                     entity.Property(e => e.Amount)
                             .IsRequired();
+                    entity.Property(e => e.IsAvailable)
+                            .IsRequired()
+                            .HasDefaultValue(true);
                     entity.HasOne(p => p.User)
                           .WithMany(u => u.Products)
                           .HasForeignKey(p => p.UserId)

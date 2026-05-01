@@ -5,7 +5,6 @@ using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
 using ECommerceNew.Application.Responses.Exceptions;
 using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Domain.Entities.ProductSide;
-using ECommerceNew.Domain.Entities.UserSide;
 using ECommerceNew.Infrastructure.EfCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -77,10 +76,11 @@ public class ProductRepository : IProductRepository
         return Result.Success();
     }
 
-    public Task DeleteAsync(Product productDto, CancellationToken cancellationToken = default)
+    public async Task SoftDeleteAsync(Product productDto, CancellationToken cancellationToken = default)
     {
-        return _context.Products.Where(p => p.ProductId == productDto.ProductId)
-            .ExecuteDeleteAsync(cancellationToken);
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == productDto.ProductId);
+        product.IsAvailable = false;
+        await _context.SaveChangesAsync();
     }
 
     public async Task<Result<List<string>>> ExtractImageUrl(int productId, CancellationToken cancellationToken = default)

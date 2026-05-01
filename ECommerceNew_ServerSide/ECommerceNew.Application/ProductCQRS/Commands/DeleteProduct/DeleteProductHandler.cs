@@ -33,7 +33,7 @@ namespace ECommerceNew.Application.ProductCQRS.Commands.DeleteProduct
                 _logger.LogWarning("Product with ProductId {0} is not found", dto.ProductId);
                 return Result.Failure(ProductErrors.NotFound);
             }
-            await _productRepository.DeleteAsync(product, cancellationToken);
+            await _productRepository.SoftDeleteAsync(product, cancellationToken);
             _logger.LogInformation("Product with ProductId {0} is deleted", product.ProductId);
 
             return Result.Success();

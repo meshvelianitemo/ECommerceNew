@@ -9,7 +9,8 @@ namespace ECommerceNew.Domain.Entities.ProductSide
         public string Description { get; set; } = string.Empty;
         public Decimal Price { get; set; }
         public Decimal? OriginalPrice { get; set; }
-        public int Amount { get; set; }
+        public bool IsAvailable { get; set; } = true;
+        public int Amount { get; set; } 
         public int UserId { get; set; } 
         public int CategoryId { get; set; } 
         public DateTime CreationDate { get; set; } = DateTime.UtcNow;
