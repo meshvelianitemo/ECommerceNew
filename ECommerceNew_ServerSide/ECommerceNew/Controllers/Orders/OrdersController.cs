@@ -1,4 +1,5 @@
 ﻿using ECommerceNew.Application.Abstractions;
+using ECommerceNew.Application.Orders.Commands.PlaceOrder;
 using ECommerceNew.Application.Orders.DTOs;
 using ECommerceNew.Application.Orders.Queries;
 using MediatR;
@@ -23,10 +24,12 @@ namespace ECommerceNew.Api.Controllers.Orders
             _logger = logger;
             _sender = sender;
         }
-        [HttpGet]
-        public async Task<IActionResult> GetOrders([FromQuery] OrderFilter filter, CancellationToken cancellationToken)
+        
+        [HttpPost]
+        public async Task<IActionResult> CreateOrder(CreateOrderDto dto, CancellationToken cancellationToken)
         {
-            var result = await _sender.Send(new GetFilteredOrdersQuery(filter, cancellationToken), cancellationToken);
+            _logger.LogInformation("Received request to create order for user {UserId}", dto.UserId);
+            var result = await _sender.Send(new CreateOrderCommand(dto));
             if (!result.IsSuccess)
             {
                 return NotFound(new
@@ -40,9 +43,7 @@ namespace ECommerceNew.Api.Controllers.Orders
                     }
                 });
             }
-
-            return Ok(new { success = result.IsSuccess, value = result.Value });
-
+            return Ok(new { success = result.IsSuccess, message = "Order placed sucessfully!" });
         }
     }
 }

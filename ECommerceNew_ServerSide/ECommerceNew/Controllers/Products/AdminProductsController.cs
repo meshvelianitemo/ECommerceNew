@@ -165,7 +165,6 @@ public class AdminProductsController : ControllerBase
     }
    
 
-
     [HttpPut("Update")]
     public async Task<IActionResult> Update([FromBody] UpdateProductDto productDto, CancellationToken cancellationToken)
     {

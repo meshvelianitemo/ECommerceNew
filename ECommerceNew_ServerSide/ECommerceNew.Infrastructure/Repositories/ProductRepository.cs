@@ -22,8 +22,6 @@ public class ProductRepository : IProductRepository
         _context = context;
         _bucketName = config["AWS:Bucket"];
         _region = config["AWS:Region"];
-        
-
     }
 
     public async Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)

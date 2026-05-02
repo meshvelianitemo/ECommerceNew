@@ -92,4 +92,12 @@ namespace ECommerceNew.Application.Results.Errors
             new("Review.DuplicateReview", "User has already reviewed this product", "Review -> Database");
     }
 
+
+    public static class OrderErrors
+    {
+        public static readonly Error OrderNotFound = 
+            new("Order.OrderNotFound", "Couldnt retrieve order", "Order -> Client");
+        public static readonly Error NotEnoughStock =
+            new("Order.NotEnoughStock", "Not enough stock for one or more products in the order", "Order -> Stock");
+    }
 }
