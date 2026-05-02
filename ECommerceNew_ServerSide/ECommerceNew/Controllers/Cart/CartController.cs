@@ -1,7 +1,7 @@
-﻿using ECommerceNew.Application.ProductCQRS.Commands.AddToCart;
-using ECommerceNew.Application.ProductCQRS.Commands.RemoveFromCart;
-using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
-using ECommerceNew.Application.ProductCQRS.Queries.GetCartItems;
+﻿using ECommerceNew.Application.Cart.Dtos;
+using ECommerceNew.Application.Cart.Commands.AddToCart;
+using ECommerceNew.Application.Cart.Commands.RemoveFromCart;
+using ECommerceNew.Application.Cart.Queries.GetCartItems;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

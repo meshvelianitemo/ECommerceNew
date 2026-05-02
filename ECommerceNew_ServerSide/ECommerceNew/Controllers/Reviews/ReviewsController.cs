@@ -27,10 +27,10 @@ namespace ECommerceNew.Api.Controllers.Reviews
             _reviewRepository = reviewRepository;
         }
 
-        [HttpGet("product/{productId}")]
-        public async Task<IActionResult> GetReviewsForProduct(int productId, CancellationToken cancellationToken)
+        [HttpGet("product")]
+        public async Task<IActionResult> GetReviewsForProduct([FromQuery] ReviewQueryParameters queryParams, CancellationToken cancellationToken)
         {
-            var result = await _sender.Send(new ReviewsForProductQuery(productId), cancellationToken);
+            var result = await _sender.Send(new ReviewsForProductQuery(queryParams), cancellationToken);
             if (!result.IsSuccess)
             {
                 return NotFound(new

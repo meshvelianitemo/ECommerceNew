@@ -1,21 +1,20 @@
-﻿
-using ECommerceNew.Application.Abstractions;
+﻿using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Results.Errors;
 using MediatR;
 
-namespace ECommerceNew.Application.ProductCQRS.Commands.RemoveFromCart
+namespace ECommerceNew.Application.Cart.Commands.RemoveFromCart
 {
     public class RemoveFromCartHandler : IRequestHandler<RemoveFromCartCommand, Result>
     {
-        private readonly IProductRepository _productRepository;
-        public RemoveFromCartHandler(IProductRepository productRepository)
+        private readonly ICartRepository _cartRepository;
+        public RemoveFromCartHandler(ICartRepository cartRepository)
         {
-            _productRepository = productRepository;
+            _cartRepository = cartRepository;
         }
 
         public Task<Result> Handle(RemoveFromCartCommand request, CancellationToken cancellationToken)
         {
-            var numberOfAffectedRows = _productRepository.RemoveFromCart(request._Dto.ProductId,
+            var numberOfAffectedRows = _cartRepository.RemoveFromCart(request._Dto.ProductId,
                 request._Dto.UserId,
                 cancellationToken);
 

@@ -1,5 +1,4 @@
-﻿
-namespace ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos
+﻿namespace ECommerceNew.Application.Cart.Dtos
 {
     public class RemoveFromCartDto
     {

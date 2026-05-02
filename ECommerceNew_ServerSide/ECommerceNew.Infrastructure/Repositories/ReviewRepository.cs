@@ -1,4 +1,5 @@
 ﻿using ECommerceNew.Application.Abstractions;
+using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
 using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Application.Reviews.DTOs;
 using ECommerceNew.Domain.Entities.ProductSide;
@@ -114,34 +115,57 @@ namespace ECommerceNew.Infrastructure.Repositories
         /// </summary>
         /// <param name="productId"></param>
         /// <returns></returns>
-        public async Task<Result<ReviewsForProduct>> GetReviewsForProduct(int productId, CancellationToken cancellationToken)
+        public async Task<Result<PagedResult<ReviewDto>>> GetReviewsForProduct(
+            ReviewQueryParameters queryParams,
+            CancellationToken cancellationToken)
         {
+            var page = queryParams.Page ?? 1;
+            var pageSize = queryParams.PageSize ?? 5;
+
+            page = page <= 0 ? 1 : page;
+            pageSize = pageSize <= 0 ? 5 : pageSize;
+
             var existingProduct = await _productRepository
-                .GetByIdAsync(productId);
+                .GetByIdAsync(queryParams.ProductId);
+
             if (existingProduct == null)
+                return Result<PagedResult<ReviewDto>>.Failure(ProductErrors.NotFound);
+
+            var baseQuery = _context.Reviews
+                .Where(r => r.ProductId == queryParams.ProductId)
+                .Include(r => r.User)
+                .OrderByDescending(r => r.CreatedAt)
+                .AsQueryable();
+
+            var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+            var reviews = await baseQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new ReviewDto
+                {
+                    ReviewId = r.ReviewId,
+                    ProductId = r.ProductId,
+                    Author = r.User.FirstName + " " + r.User.LastName,
+                    UserId = r.UserId,
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    CreatedAt = r.CreatedAt
+                })
+                .ToListAsync(cancellationToken);
+
+            var result = new PagedResult<ReviewDto>
             {
-                return Result<ReviewsForProduct>.Failure(ProductErrors.NotFound);
-            }
-            var rawReviews = await _context.Reviews
-                .Include(r => r.User) 
-                .Where(r => r.ProductId == productId)
-                .ToListAsync();
+                Items = reviews,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+            };
 
-            var reviews = new ReviewsForProduct();
-
-            reviews.Reviews = rawReviews.Select(r => new ReviewDto
-            {
-                ReviewId = r.ReviewId,
-                ProductId = r.ProductId,
-                Author = $"{r.User.FirstName} {r.User.LastName}",
-                UserId = r.UserId,
-                Rating = r.Rating,
-                Comment = r.Comment,
-                CreatedAt = r.CreatedAt
-            }).ToList();
-
-            return Result<ReviewsForProduct>.Success(reviews);
+            return Result<PagedResult<ReviewDto>>.Success(result);
         }
+        
 
         /// <summary>
         /// Update Review record

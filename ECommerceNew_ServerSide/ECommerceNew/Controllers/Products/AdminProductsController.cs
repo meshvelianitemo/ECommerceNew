@@ -1,10 +1,12 @@
 using ECommerceNew.Application.Product.Commands.CreateProduct;
 using ECommerceNew.Application.Product.DTOs.ProductDtos;
+using ECommerceNew.Application.ProductCQRS.Commands.ActivateProduct;
 using ECommerceNew.Application.ProductCQRS.Commands.DeleteProduct;
 using ECommerceNew.Application.ProductCQRS.Commands.DeleteProductImage;
 using ECommerceNew.Application.ProductCQRS.Commands.UpdateProduct;
 using ECommerceNew.Application.ProductCQRS.Commands.UploadImage;
 using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
+using ECommerceNew.Application.Products.Queries.GetUnavailableProducts;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +16,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace ECommerceNew.Controllers;
 
 [ApiController]
-//[Authorize(Roles ="Admin")]
+[Authorize(Roles ="Admin")]
 [EnableRateLimiting("concurrency")]
 [Route("api/admin/products")]
 public class AdminProductsController : ControllerBase
@@ -27,7 +29,26 @@ public class AdminProductsController : ControllerBase
         _sender = sender;
         _logger = logger;
     }
-    
+
+    [HttpGet("Inactive")]
+    public async Task<IActionResult> GetInactiveProducts([FromQuery] ProductQueryParameters queryParams,CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new UnavailableProductQuery(queryParams), cancellationToken);
+        if (!result.IsSuccess)
+        {
+            return NotFound(new
+            {
+                success = result.IsSuccess,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
+        }
+        return Ok(new { success = result.IsSuccess, value = result.Value });
+    }
 
     [HttpPost("Create")]
     public async Task<ActionResult<int>> Create([FromBody] CreateProductDto dto, CancellationToken cancellationToken)
@@ -169,6 +190,30 @@ public class AdminProductsController : ControllerBase
             message = "Product update successfully."
         });
 
+    }
+
+    [HttpPut("Activate")]
+    public async Task<IActionResult> Activate([FromBody] int productId, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ActivateProductCommand(productId), cancellationToken);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                error = new
+                {
+                    code = result.Error.Code,
+                    message = result.Error.Message,
+                    field = result.Error.Field
+                }
+            });
+        }
+        return Ok(new
+        {
+            success = true,
+            message = "Product activated successfully."
+        });
     }
 
 }

@@ -28,6 +28,7 @@ namespace ECommerceNew.Application.ProductCQRS.Queries.GetAllProducts
         {
             var products = await _productRepository.ListAsync(
                 request.queryParams,
+                isActive: true,
                 cancellationToken);
             var result = Result<PagedResult<ProductDetailDto>>.Success(products);
             return result;

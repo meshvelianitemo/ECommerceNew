@@ -1,8 +1,7 @@
-﻿
-using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
+﻿using ECommerceNew.Application.Cart.Dtos;
 using FluentValidation;
 
-namespace ECommerceNew.Application.ProductCQRS.Commands.AddToCart
+namespace ECommerceNew.Application.Cart.Commands.AddToCart
 {
     public class AddToCartValidator : AbstractValidator<AddToCartDto>
     {

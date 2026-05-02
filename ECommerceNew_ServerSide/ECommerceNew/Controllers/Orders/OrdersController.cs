@@ -2,13 +2,17 @@
 using ECommerceNew.Application.Orders.DTOs;
 using ECommerceNew.Application.Orders.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ECommerceNew.Api.Controllers.Orders
 {
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("token")]
     [ApiController]
     public class OrdersController : ControllerBase
     {

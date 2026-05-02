@@ -1,10 +1,10 @@
 ﻿using MediatR;
 using Amazon.Runtime.Internal;
 using System.Drawing;
-using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
 using ECommerceNew.Application.Results.Errors;
+using ECommerceNew.Application.Cart.Dtos;
 
-namespace ECommerceNew.Application.ProductCQRS.Commands.RemoveFromCart
+namespace ECommerceNew.Application.Cart.Commands.RemoveFromCart
 {
     public class RemoveFromCartCommand : IRequest<Result>
     {

@@ -1,4 +1,5 @@
-﻿using ECommerceNew.Application.Results.Errors;
+﻿using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
+using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Application.Reviews.DTOs;
 using MediatR;
 using System;
@@ -10,5 +11,5 @@ using System.Threading.Tasks;
 
 namespace ECommerceNew.Application.Reviews.Queries.GetReviewsForProduct
 {
-    public record ReviewsForProductQuery(int productId) : IRequest<Result<ReviewsForProduct>>;
+    public record ReviewsForProductQuery(ReviewQueryParameters queryParams) : IRequest<Result<PagedResult<ReviewDto>>>;
 }

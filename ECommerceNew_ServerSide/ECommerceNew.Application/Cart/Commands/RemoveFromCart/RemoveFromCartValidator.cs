@@ -1,8 +1,7 @@
-﻿
-using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
+﻿using ECommerceNew.Application.Cart.Dtos;
 using FluentValidation;
 
-namespace ECommerceNew.Application.ProductCQRS.Commands.RemoveFromCart
+namespace ECommerceNew.Application.Cart.Commands.RemoveFromCart
 {
     public class RemoveFromCartValidator : AbstractValidator<RemoveFromCartDto>
     {

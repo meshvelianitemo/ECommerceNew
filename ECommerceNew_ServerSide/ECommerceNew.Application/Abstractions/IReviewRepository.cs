@@ -1,4 +1,5 @@
-﻿using ECommerceNew.Application.Results.Errors;
+﻿using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
+using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Application.Reviews.DTOs;
 using System.Threading;
 namespace ECommerceNew.Application.Abstractions
@@ -6,7 +7,7 @@ namespace ECommerceNew.Application.Abstractions
     public interface IReviewRepository
     {
         //read 
-        Task<Result<ReviewsForProduct>> GetReviewsForProduct(int productId, CancellationToken cancellationToken);
+        Task<Result<PagedResult<ReviewDto>>> GetReviewsForProduct(ReviewQueryParameters queryParams, CancellationToken cancellationToken);
         Task<Result<ReviewDto>> GetReview(int reviewId, CancellationToken cancellationToken);
 
         //write
