@@ -5,6 +5,7 @@ using ECommerceNew.Domain.Entities.Commerce;
 using ECommerceNew.Domain.enums;
 using ECommerceNew.Infrastructure.EfCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 
 namespace ECommerceNew.Infrastructure.Repositories
@@ -12,67 +13,18 @@ namespace ECommerceNew.Infrastructure.Repositories
     public class OrderRepository : IOrderRepository
     {
         private readonly ECommerceDbContext _context;
-        public OrderRepository(ECommerceDbContext context)
+        private readonly ILogger<OrderRepository> _logger;
+        public OrderRepository(ECommerceDbContext context, ILogger<OrderRepository> logger)
         {
+            _logger = logger;
             _context = context;
         }
 
-        public async Task<Result> AddOrderItems(List<CreateOrderItemDto> orderItem,int orderId, CancellationToken cancellationToken = default)
+        public async Task<Result> CreateOrderWithItemsAsync(CreateOrderDto dto, CancellationToken cancellationToken)
         {
-            var order =await _context.Orders
-                .FirstOrDefaultAsync(o => o.Id == orderId);
-            if (order == null)
-            {
-                return Result.Failure(OrderErrors.OrderNotFound);
-            }
-            // FETCH ONCE NOT N TIMES 
-            var productIds = orderItem.Select(i => i.ProductId).ToList();
-
-            var products = await _context.Products
-                .Where(p => productIds.Contains(p.ProductId))
-                .ToDictionaryAsync(p => p.ProductId, cancellationToken);
-
-            //WRAPPING EVERYTHING IN A TRANSACTION TO ENSURE ATOMICITY, IF ANY OPERATION FAILS, THE ENTIRE TRANSACTION WILL BE ROLLED BACK
+            _logger.LogInformation("Starting transaction to create order for user {UserId}", dto.UserId);
             using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
-            for (int i = 0;i < orderItem.Count; i++)
-            {
-                var item = orderItem[i];
-
-                var product = products[item.ProductId];
-                if (product == null)
-                {
-                    return Result.Failure(ProductErrors.NotFound);
-                }
-                if (!product.IsAvailable)
-                    return Result.Failure(ProductErrors.OutOfStock);
-
-                if (product.Amount < item.Quantity)
-                    return Result.Failure(OrderErrors.NotEnoughStock);
-
-                var orderItemEntity = new OrderItem
-                {
-                    OrderId = orderId,
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    UnitPrice = product.Price,
-                    TotalPrice = product.Price * item.Quantity
-                };
-                //REDUCE STOCK QUANTITY OF THE PRODUCTS
-                product.Amount -= item.Quantity;
-                //ADD THE TOTAL PRICE OF THE ORDER ITEM THE ORDER RECORD
-                order.TotalAmount += orderItemEntity.TotalPrice;
-                await _context.OrderItems.AddAsync(orderItemEntity, cancellationToken);
-            }
-            //SAVE ALL CHANGES TO THE DATABASE, THIS INCLUDES BOTH THE NEW ORDER ITEMS AND THE UPDATED PRODUCT STOCK QUANTITIES
-            await _context.SaveChangesAsync(cancellationToken);
-            //COMMIT THE TRANSACTION TO PERSIST ALL CHANGES TO THE DATABASE
-            await transaction.CommitAsync(cancellationToken);
-            return Result.Success();
-        }
-
-        public async Task<Result<int>> CreateOrderAsync(CreateOrderDto dto, CancellationToken cancellationToken = default)
-        {
             var order = new Order
             {
                 UserId = dto.UserId,
@@ -82,8 +34,56 @@ namespace ECommerceNew.Infrastructure.Repositories
                 Status = OrderStatus.Pending,
                 OrderDate = DateTime.UtcNow,
             };
-            await _context.Orders.AddAsync(order);
+
+            await _context.Orders.AddAsync(order, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
+
+            var productIds = dto.Items.Select(i => i.ProductId).ToList();
+
+            var products = await _context.Products
+                .Where(p => productIds.Contains(p.ProductId))
+                .ToDictionaryAsync(p => p.ProductId, cancellationToken);
+
+            foreach (var item in dto.Items)
+            {
+                if (!products.TryGetValue(item.ProductId, out var product))
+                {
+                    _logger.LogWarning("Product with ID {ProductId} not found for order {OrderId}", item.ProductId, order.Id);
+                    return Result.Failure(ProductErrors.NotFound);
+                }
+
+                if (!product.IsAvailable)
+                {
+                    _logger.LogWarning("Product with ID {ProductId} is out of stock for order {OrderId}", item.ProductId, order.Id);
+                    return Result.Failure(ProductErrors.OutOfStock);
+                }
+
+                if (product.Amount < item.Quantity)
+                {
+                    _logger.LogWarning("Not enough stock for product ID {ProductId} for order {OrderId}. Requested: {Requested}, Available: {Available}",
+                        item.ProductId, order.Id, item.Quantity, product.Amount);
+                    return Result.Failure(OrderErrors.NotEnoughStock);
+                }
+
+                var orderItem = new OrderItem
+                {
+                    OrderId = order.Id,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    UnitPrice = product.Price,
+                    TotalPrice = product.Price * item.Quantity
+                };
+
+                product.Amount -= item.Quantity;
+                order.TotalAmount += orderItem.TotalPrice;
+
+                await _context.OrderItems.AddAsync(orderItem, cancellationToken);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            _logger.LogInformation("Order {OrderId} created successfully for user {UserId}", order.Id, dto.UserId);
+
             return Result<int>.Success(order.Id);
         }
 
@@ -110,7 +110,8 @@ namespace ECommerceNew.Infrastructure.Repositories
             {
                 query = query.Where(o => o.OrderDate <= filter.CreatedTo.Value);
             }
-
+            _logger.LogInformation("Retrieving orders with filters - UserId: {UserId}, Statuses: {Statuses}, CreatedFrom: {CreatedFrom}, CreatedTo: {CreatedTo}",
+                filter.UserId, filter.Statuses != null ? string.Join(",", filter.Statuses) : "None", filter.CreatedFrom, filter.CreatedTo);
             return await query
                 .Select(o => new OrderDto
                 {

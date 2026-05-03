@@ -1,13 +1,13 @@
-using Amazon.S3.Model;
+
 using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Product.DTOs.ProductDtos;
 using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
-using ECommerceNew.Application.Responses.Exceptions;
 using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Domain.Entities.ProductSide;
 using ECommerceNew.Infrastructure.EfCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace ECommerceNew.Infrastructure.Repositories;
 
@@ -16,12 +16,14 @@ public class ProductRepository : IProductRepository
     private readonly ECommerceDbContext _context;
     private readonly string _bucketName;
     private readonly string _region;
+    private readonly ILogger<ProductRepository> _logger;
 
-    public ProductRepository(ECommerceDbContext context, IConfiguration config)
+    public ProductRepository(ECommerceDbContext context, ILogger<ProductRepository> logger , IConfiguration config)
     {
         _context = context;
         _bucketName = config["AWS:Bucket"];
         _region = config["AWS:Region"];
+        _logger = logger;
     }
 
     public async Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
@@ -39,6 +41,7 @@ public class ProductRepository : IProductRepository
 
         if (existingProduct == null)
         {
+            _logger.LogWarning("AddImageUrl failed. Product not found. ProductId={ProductId}, UserId={UserId}", productId, userId);
             return Result.Failure(ProductErrors.NotFound);
         }
 
@@ -59,6 +62,7 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(p => p.ProductId == productId);
         if (product == null)
         {
+            _logger.LogWarning("RemoveImage failed. Product not found. ProductId={ProductId}", productId);
             return Result.Failure(ProductErrors.NotFound);
         }
         var productImage =  await _context.ProductImages
@@ -66,6 +70,7 @@ public class ProductRepository : IProductRepository
         
         if (productImage == null)
         {
+            _logger.LogWarning("RemoveImage failed. Image not found. ProductId={ProductId}, Key={Key}", productId, key);
             return Result.Failure(ProductErrors.ImageNotFound);
         }
 
@@ -76,8 +81,15 @@ public class ProductRepository : IProductRepository
 
     public async Task SoftDeleteAsync(Product productDto, CancellationToken cancellationToken = default)
     {
-        var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == productDto.ProductId);
+        var product = await _context.Products
+            .FirstOrDefaultAsync(p => p.ProductId == productDto.ProductId);
+        if (product == null)
+        {
+            _logger.LogWarning("SoftDelete failed. Product not found. ProductId={ProductId}", productDto.ProductId);
+            return;
+        }
         product.IsAvailable = false;
+        _logger.LogInformation("Product soft-deleted. ProductId={ProductId}", product.ProductId);
         await _context.SaveChangesAsync();
     }
 
@@ -189,6 +201,9 @@ public class ProductRepository : IProductRepository
             ModifiedDate = p.ModifiedDate
         }).ToList();
 
+        _logger.LogInformation("Products fetched. Page={Page}, PageSize={PageSize}, Total={TotalCount}, ActiveOnly={IsActive}",
+            page, pageSize, totalCount, isActive);
+
         return new PagedResult<ProductDetailDto>
         {
             Items = items,
@@ -206,6 +221,11 @@ public class ProductRepository : IProductRepository
         var existing = await _context.Products
             .FirstOrDefaultAsync(e => e.ProductId == product.ProductId, cancellationToken);
 
+        if (existing == null)
+        {
+            _logger.LogWarning("Update failed. Product not found. ProductId={ProductId}", product.ProductId);
+            return Result.Failure(ProductErrors.NotFound);
+        }
         //var temp = existing.Price;
 
         existing.Name = product.Name;
@@ -216,6 +236,7 @@ public class ProductRepository : IProductRepository
         existing.ModifiedDate = product.ModifiedDate;
 
         await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Product updated. ProductId={ProductId}", product.ProductId);    
         return Result.Success();
     }
 
@@ -229,6 +250,7 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(p => p.ProductId == productId, cancellationToken);
         if (existingProduct == null)
         {
+            _logger.LogWarning("AddToWishlist failed. Product not found. ProductId={ProductId}", productId);
             return Result.Failure(ProductErrors.NotFound);
         }
         var existingWishlistItem = await _context.WishListItems
@@ -237,6 +259,7 @@ public class ProductRepository : IProductRepository
 
         if (existingWishlistItem != null)
         {
+            _logger.LogWarning("AddToWishlist failed. Already exists. ProductId={ProductId}, UserId={UserId}", productId, userId);
             return Result.Failure(ProductErrors.AlreadyInWishlist);
         }
 
@@ -249,7 +272,7 @@ public class ProductRepository : IProductRepository
         };
         _context.WishListItems.Add(newWishListItem);
         await _context.SaveChangesAsync();
-
+        _logger.LogInformation("Product added to wishlist. ProductId={ProductId}, UserId={UserId}", productId, userId);
         return Result.Success();
     }
 
@@ -261,9 +284,11 @@ public class ProductRepository : IProductRepository
 
         if (affectedRows == 0)
         {
+            _logger.LogWarning("RemoveWishlist failed. Item not found. ProductId={ProductId}, UserId={UserId}", productId, userId);
             return Result.Failure(ProductErrors.NotInWishlist);    
         }
 
+        _logger.LogInformation("Wishlist item removed. ProductId={ProductId}, UserId={UserId}", productId, userId);
         return Result.Success();
     }
 
@@ -327,17 +352,24 @@ public class ProductRepository : IProductRepository
 
     public async Task<Result> ActivateProduct(int productId, CancellationToken cancellationToken = default)
     {
-        var product = _context.Products
+        var product = await _context.Products
             .IgnoreQueryFilters()
-            .FirstOrDefault(p => p.ProductId == productId);
+            .FirstOrDefaultAsync(p => p.ProductId == productId);
         if (product == null)
+        {
+            _logger.LogWarning("Activate failed. Product not found. ProductId={ProductId}", productId);
             return Result.Failure(ProductErrors.NotFound);
-        
+        }
         if (product.Amount == 0)
+        {
+            _logger.LogWarning("Activate failed. Out of stock. ProductId={ProductId}", productId);
             return Result.Failure(ProductErrors.OutOfStock);
+        }
+            
 
         product.IsAvailable = true;
         await _context.SaveChangesAsync();
+        _logger.LogInformation("Product activated. ProductId={ProductId}", productId);
         return Result.Success();
     }
 

@@ -1,12 +1,9 @@
 ﻿using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Orders.Commands.PlaceOrder;
 using ECommerceNew.Application.Orders.DTOs;
-using ECommerceNew.Application.Orders.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ActionConstraints;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
 
 namespace ECommerceNew.Api.Controllers.Orders
