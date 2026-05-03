@@ -127,5 +127,10 @@ namespace ECommerceNew.Infrastructure.Repositories
                 .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
         }
+
+        public Task<Result> UpdateOrder(UpdateOrderDto dto, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
