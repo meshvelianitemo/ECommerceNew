@@ -76,6 +76,9 @@ namespace ECommerceNew.Application.Results.Errors
         public static readonly Error CartNotFound =
             new("User.CartNotFound", "Cart was not found for the user.", "User<->Cart");
 
+        public static readonly Error CartEmpty = 
+            new("User.CartEmpty", "Cart is empty.", "User<->Cart");
+
         public static readonly Error GenericUserRetrievalProblem =
             new("Admin.CouldntRetrieveUsers", "Could not retrieve users", "Users -> Admin");
     }

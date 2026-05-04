@@ -172,5 +172,24 @@ namespace ECommerceNew.Infrastructure.Repositories
 
             return Result.Success();
         }
+
+        /// <summary>
+        /// clears the cart for a user by deleting all cart items associated with the user's cart.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<Result> ClearCart(int userId, CancellationToken cancellationToken = default)
+        {
+            var affectedCartItems = await _context.CartItems
+                .Where(ci => ci.Cart.UserId == userId)
+                .ExecuteDeleteAsync(cancellationToken);
+            if (affectedCartItems == 0)
+            {
+                return Result.Failure(UserErrors.CartEmpty);
+            }
+            return Result.Success();
+        }
+
     }
 }

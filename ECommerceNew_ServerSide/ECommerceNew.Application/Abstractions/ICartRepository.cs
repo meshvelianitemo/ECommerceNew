@@ -10,5 +10,6 @@ namespace ECommerceNew.Application.Abstractions
         Task<Result> AddToCart(int productId, int userId, int quantity, CancellationToken cancellationToken = default);
         Task<Result> RemoveFromCart(int productId, int userId, CancellationToken cancellationToken = default);
         Task<Result<PagedResult<CartItemDetailDto>>> GetCartItemsForUserAsync(CartItemsQueryParameters queryParams, CancellationToken cancellationToken = default);
+        Task<Result> ClearCart(int userId, CancellationToken cancellationToken = default);
     }
 }

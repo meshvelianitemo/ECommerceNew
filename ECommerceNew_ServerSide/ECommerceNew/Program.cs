@@ -123,6 +123,7 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:5500",
                 "http://localhost:3001",
                 "http://172.18.104.53:3000",
+                "http://192.168.0.8:3000",
                 "null"                    
             )
             .AllowAnyMethod()
