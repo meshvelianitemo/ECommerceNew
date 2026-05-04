@@ -107,7 +107,7 @@ var client = new PaypalServerSdkClient.Builder()
             "YOUR_CLIENT_SECRET"
         ).Build()
     )
-    .Environment(PaypalServerSdk.Standard.Environment.Sandbox) // or Production
+    .Environment(PaypalServerSdk.Standard.Environment.Sandbox) 
     .Build();
 
 
@@ -122,6 +122,7 @@ builder.Services.AddCors(options =>
                 "http://localhost:3000",   
                 "http://127.0.0.1:5500",
                 "http://localhost:3001",
+                "http://172.18.104.53:3000",
                 "null"                    
             )
             .AllowAnyMethod()

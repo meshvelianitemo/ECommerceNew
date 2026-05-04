@@ -1,6 +1,7 @@
 ﻿using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Orders.Commands.PlaceOrder;
 using ECommerceNew.Application.Orders.DTOs;
+using ECommerceNew.Domain.enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +43,5 @@ namespace ECommerceNew.Api.Controllers.Orders
             }
             return Ok(new { success = result.IsSuccess, message = "Order placed sucessfully!" });
         }
-        public async Task<IActionResult> 
     }
 }

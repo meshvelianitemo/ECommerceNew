@@ -5,8 +5,9 @@ namespace ECommerceNew.Application.Orders.DTOs
 {
     public class UpdateOrderDto
     {
+        public int Id { get; set; }
         public OrderStatus Status { get; set; }
-        public Decimal TotalAmount { get; set; }
-        // GOTTA UPDATE EACH ITEM IN THE ORDER TOO, BUT FOR NOW, THIS IS ENOUGH
+        public string Address { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 }
