@@ -1,16 +1,21 @@
 ﻿using Amazon.S3.Model;
 using ECommerceNew.Application.Abstractions;
+using ECommerceNew.Application.Orders.Commands.ChangeOrderStatus;
 using ECommerceNew.Application.Orders.Commands.PlaceOrder;
 using ECommerceNew.Application.Orders.DTOs;
 using ECommerceNew.Application.Orders.Queries;
 using ECommerceNew.Domain.enums;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ECommerceNew.Api.Controllers.Orders
 {
     [Route("api/[controller]")]
+    [Authorize(Roles= "Admin")]
+    [EnableRateLimiting("token")]
     [ApiController]
     public class AdminOrderController : ControllerBase
     {
@@ -43,9 +48,9 @@ namespace ECommerceNew.Api.Controllers.Orders
         }
 
         [HttpPut]
-        public async Task<IActionResult> ChangeOrderStatus(OrderStatus newOrderStatus, CancellationToken cancellationToken)
+        public async Task<IActionResult> ChangeOrderStatus(UpdateOrderDto dto, CancellationToken cancellationToken )
         {
-            var result = await _sender.Send(new ChangeOrderStatusCommand(, cancellationToken), cancellationToken);
+            var result = await _sender.Send(new ChangeOrderStatusCommand(dto));
             if (!result.IsSuccess)
             {
                 return NotFound(new
@@ -60,7 +65,7 @@ namespace ECommerceNew.Api.Controllers.Orders
                 });
             }
 
-            return Ok(new { success = result.IsSuccess, value = result.Value });
+            return Ok(new { success = result.IsSuccess, message = "Order status Changed Successfully" });
         }
 
     }

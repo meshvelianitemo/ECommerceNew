@@ -23,6 +23,7 @@ namespace ECommerceNew.Infrastructure
             services.AddScoped<IReviewRepository, ReviewRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<ICartRepository, CartRepository>();
+            services.AddScoped<IDashboardRepository, DashboardRepository>();
             services.AddSingleton(sp =>
             {
                 var config = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
