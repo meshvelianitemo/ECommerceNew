@@ -17,12 +17,12 @@ namespace ECommerceNew.Api.Controllers.Dashboard
     [Authorize(Roles ="Admin")]
     [EnableRateLimiting("token")]
     [ApiController]
-    public class DashboardController : ControllerBase
+    public class AnalyticsController : ControllerBase
     {
         private readonly ISender _sender;
-        private readonly ILogger<DashboardController> _logger;
+        private readonly ILogger<AnalyticsController> _logger;
 
-        public DashboardController(ISender sender, ILogger<DashboardController> logger)
+        public AnalyticsController(ISender sender, ILogger<AnalyticsController> logger)
         {
             _sender = sender;
             _logger = logger;
