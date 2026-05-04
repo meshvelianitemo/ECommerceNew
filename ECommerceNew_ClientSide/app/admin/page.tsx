@@ -1,8 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
-import { Plus, Pencil, Trash2, ImagePlus } from 'lucide-react'
+import { Plus, Pencil, Trash2, ImagePlus, RotateCcw, BarChart2 } from 'lucide-react'
+
+const AnalyticsDashboard = dynamic(() => import('@/components/admin/AnalyticsDashboard'), { ssr: false })
 import { useRequireAuth } from '@/hooks/useAuth'
 import { useTranslation } from '@/lib/i18n'
 import { toast } from '@/store/toastStore'
@@ -12,8 +15,18 @@ import { CATEGORIES } from '@/lib/categories'
 import {
   getAllProducts, getProduct, createProduct, updateProduct,
   deleteProduct, uploadImage, getImageUrls, deleteImage,
+  activateProduct, getInactiveProducts,
 } from '@/lib/api/products'
-import type { Product } from '@/lib/types'
+import { getOrders } from '@/lib/api/orders'
+import type { Product, Order, OrderStatus } from '@/lib/types'
+
+const STATUS_LABEL: Record<OrderStatus, string> = { 0: 'Pending', 1: 'Shipped', 2: 'Paid', 3: 'Cancelled' }
+const STATUS_STYLE: Record<OrderStatus, { bg: string; color: string; border: string }> = {
+  0: { bg: '#F5F1E3', color: '#2C2C2C', border: '#C8C2B0' },
+  1: { bg: '#FFF9DB', color: '#7A5C00', border: '#FCD758' },
+  2: { bg: '#EDFBF0', color: '#166534', border: '#86EFAC' },
+  3: { bg: '#FEF2F2', color: '#991B1B', border: '#FCA5A5' },
+}
 
 interface ProductForm {
   name: string; description: string; price: string; originalPrice: string; amount: string; categoryId: string
@@ -25,10 +38,19 @@ export default function AdminPage() {
   const { user, hydrated } = useRequireAuth(true)
   const { t } = useTranslation()
 
+  const [tab, setTab] = useState<'products' | 'inactive' | 'orders' | 'analytics'>('products')
+
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+
+  const [inactiveProducts, setInactiveProducts] = useState<Product[]>([])
+  const [inactiveLoading, setInactiveLoading] = useState(false)
+
+  const [orders, setOrders] = useState<Order[]>([])
+  const [ordersLoading, setOrdersLoading] = useState(false)
+  const [orderStatusFilter, setOrderStatusFilter] = useState<number | null>(null)
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
@@ -53,7 +75,35 @@ export default function AdminPage() {
     finally { setLoading(false) }
   }, [])
 
+  const loadInactive = useCallback(async () => {
+    setInactiveLoading(true)
+    try {
+      const res = await getInactiveProducts()
+      setInactiveProducts(res.value.items)
+    } catch { setInactiveProducts([]) }
+    finally { setInactiveLoading(false) }
+  }, [])
+
+  const loadOrders = useCallback(async (statusFilter: number | null) => {
+    setOrdersLoading(true)
+    try {
+      const res = await getOrders(statusFilter !== null ? { Statuses: [statusFilter] } : {})
+      setOrders(res.value)
+    } catch { setOrders([]) }
+    finally { setOrdersLoading(false) }
+  }, [])
+
   useEffect(() => { if (hydrated && user) load() }, [hydrated, user, load])
+  useEffect(() => { if (hydrated && user && tab === 'inactive') loadInactive() }, [hydrated, user, tab, loadInactive])
+  useEffect(() => { if (hydrated && user && tab === 'orders') loadOrders(orderStatusFilter) }, [hydrated, user, tab, orderStatusFilter, loadOrders])
+
+  const handleActivate = async (productId: number) => {
+    try {
+      await activateProduct(productId)
+      toast.success('Product activated')
+      loadInactive()
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : 'Failed') }
+  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -174,7 +224,7 @@ export default function AdminPage() {
           value={form.categoryId}
           onChange={(e) => setField('categoryId', e.target.value)}
           required
-          className="w-full border-b border-border bg-transparent text-sm text-dark focus:outline-none focus:border-dark py-2 font-sans"
+          className="w-full border-b border-border bg-transparent text-sm text-dark focus:outline-none focus:border-dark py-2.5 px-3.5 font-sans"
         >
           <option value="">Select category</option>
           {CATEGORIES.map((c) => (
@@ -187,80 +237,290 @@ export default function AdminPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-      <div className="flex items-end justify-between mb-10">
+      <div className="flex items-end justify-between mb-8">
         <div>
           <h1 className="font-display text-4xl font-light text-dark tracking-wide">{t('admin.title')}</h1>
           <div className="mt-3 h-px w-16 bg-danger" />
         </div>
-        <button onClick={() => { setCreateOpen(true); setForm(EMPTY_FORM) }} className="btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          {t('admin.createProduct')}
-        </button>
+        {tab === 'products' && (
+          <button onClick={() => { setCreateOpen(true); setForm(EMPTY_FORM) }} className="btn-primary flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            {t('admin.createProduct')}
+          </button>
+        )}
       </div>
 
-      {/* Table */}
-      {loading ? (
-        <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
-      ) : (
-        <div className="bg-surface border border-border overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                {['ID', 'Product', 'Category', 'Price', 'Stock', 'Actions'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-[10px] font-sans font-medium tracking-widest uppercase text-muted">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((p, i) => (
-                <motion.tr
-                  key={p.productId}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.02 }}
-                  className="border-b border-border hover:bg-background transition-colors"
-                >
-                  <td className="px-4 py-4 text-xs font-sans text-muted tabular-nums">{p.productId}</td>
-                  <td className="px-4 py-4">
-                    <p className="text-sm font-sans text-dark max-w-[200px] truncate">{p.name}</p>
-                  </td>
-                  <td className="px-4 py-4 text-xs font-sans text-muted">{p.categoryName}</td>
-                  <td className="px-4 py-4 text-sm font-sans text-dark tabular-nums">₾{p.price.toFixed(2)}</td>
-                  <td className="px-4 py-4">
-                    <span className={`text-xs font-sans px-2 py-0.5 ${p.amount > 0 ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
-                      {p.amount > 0 ? p.amount : 'Out'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => openEdit(p)} className="btn-icon w-8 h-8" aria-label="Edit">
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => openImages(p)} className="btn-icon w-8 h-8" aria-label="Images">
-                        <ImagePlus className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => setDeleteTarget(p)} className="btn-icon w-8 h-8 text-danger hover:bg-danger/5" aria-label="Delete">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Tabs */}
+      <div className="flex gap-0 border-b-2 border-[#2C2C2C] mb-8">
+        {([
+          { key: 'products' as const, label: 'Products', icon: undefined },
+          { key: 'inactive' as const, label: 'Inactive', icon: undefined },
+          { key: 'orders' as const, label: 'Orders', icon: undefined },
+          { key: 'analytics' as const, label: 'Analytics', icon: <BarChart2 className="w-3.5 h-3.5" /> },
+        ]).map(({ key, label, icon }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className="flex items-center gap-1.5 font-sans font-black uppercase text-[11px] px-5 py-2.5 transition-colors"
+            style={{
+              letterSpacing: '0.08em',
+              backgroundColor: tab === key ? '#2C2C2C' : 'transparent',
+              color: tab === key ? 'white' : '#888',
+              borderBottom: tab === key ? '2px solid #BC2C2C' : '2px solid transparent',
+              marginBottom: '-2px',
+            }}
+          >
+            {icon}
+            {label}
+          </button>
+        ))}
+      </div>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-border">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button key={i} onClick={() => load(i + 1)}
-                  className={`w-7 h-7 text-xs font-sans ${page === i + 1 ? 'bg-dark text-white' : 'text-secondary hover:bg-border'}`}>
-                  {i + 1}
+      {/* Products Tab */}
+      {tab === 'products' && (
+        loading ? (
+          <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
+        ) : (
+          <div className="bg-surface border border-border overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  {['ID', 'Product', 'Category', 'Price', 'Stock', 'Actions'].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-sans font-medium tracking-widest uppercase text-muted">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((p, i) => (
+                  <motion.tr
+                    key={p.productId}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.02 }}
+                    className="border-b border-border hover:bg-background transition-colors"
+                  >
+                    <td className="px-4 py-4 text-xs font-sans text-muted tabular-nums">{p.productId}</td>
+                    <td className="px-4 py-4">
+                      <p className="text-sm font-sans text-dark max-w-[200px] truncate">{p.name}</p>
+                    </td>
+                    <td className="px-4 py-4 text-xs font-sans text-muted">{p.categoryName}</td>
+                    <td className="px-4 py-4 text-sm font-sans text-dark tabular-nums">₾{p.price.toFixed(2)}</td>
+                    <td className="px-4 py-4">
+                      <span className={`text-xs font-sans px-2 py-0.5 ${p.amount > 0 ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
+                        {p.amount > 0 ? p.amount : 'Out'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => openEdit(p)} className="btn-icon w-8 h-8" aria-label="Edit">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => openImages(p)} className="btn-icon w-8 h-8" aria-label="Images">
+                          <ImagePlus className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => setDeleteTarget(p)} className="btn-icon w-8 h-8 text-danger hover:bg-danger/5" aria-label="Delete">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-border">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button key={i} onClick={() => load(i + 1)}
+                    className={`w-7 h-7 text-xs font-sans ${page === i + 1 ? 'bg-dark text-white' : 'text-secondary hover:bg-border'}`}>
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      )}
+
+      {/* Inactive Tab */}
+      {tab === 'inactive' && (
+        inactiveLoading ? (
+          <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
+        ) : inactiveProducts.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="font-sans text-sm text-muted">No inactive products.</p>
+          </div>
+        ) : (
+          <div className="bg-surface border border-border overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  {['ID', 'Product', 'Category', 'Price', 'Stock', 'Action'].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-sans font-medium tracking-widest uppercase text-muted">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {inactiveProducts.map((p, i) => (
+                  <motion.tr
+                    key={p.productId}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.02 }}
+                    className="border-b border-border hover:bg-background transition-colors"
+                  >
+                    <td className="px-4 py-4 text-xs font-sans text-muted tabular-nums">{p.productId}</td>
+                    <td className="px-4 py-4">
+                      <p className="text-sm font-sans text-dark max-w-[200px] truncate">{p.name}</p>
+                    </td>
+                    <td className="px-4 py-4 text-xs font-sans text-muted">{p.categoryName}</td>
+                    <td className="px-4 py-4 text-sm font-sans text-dark tabular-nums">₾{p.price.toFixed(2)}</td>
+                    <td className="px-4 py-4">
+                      <span className="text-xs font-sans px-2 py-0.5 bg-danger/10 text-danger">
+                        {p.amount > 0 ? p.amount : 'Out'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <button
+                        onClick={() => handleActivate(p.productId)}
+                        className="flex items-center gap-1.5 font-sans font-black uppercase text-[10px] px-3 py-1.5 transition-colors"
+                        style={{ backgroundColor: '#2C2C2C', color: 'white', letterSpacing: '0.06em' }}
+                        onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = '#BC2C2C')}
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = '#2C2C2C')}
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        Activate
+                      </button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+
+      {/* Orders Tab */}
+      {tab === 'orders' && (
+        <div>
+          {/* Status tab strip */}
+          <div className="flex overflow-x-auto" style={{ borderBottom: '1px solid #E5E0D0' }}>
+            {([null, 0, 1, 2, 3] as const).map((s) => {
+              const active = orderStatusFilter === s
+              return (
+                <button
+                  key={s ?? 'all'}
+                  onClick={() => setOrderStatusFilter(s)}
+                  className="flex items-center gap-2 font-sans text-[11px] px-5 py-3 whitespace-nowrap transition-colors shrink-0"
+                  style={{
+                    fontWeight: active ? 700 : 400,
+                    color: active ? '#2C2C2C' : '#888',
+                    borderBottom: active ? '2px solid #BC2C2C' : '2px solid transparent',
+                    marginBottom: '-1px',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {s !== null && (
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: STATUS_STYLE[s].border }}
+                    />
+                  )}
+                  {s === null ? 'All Orders' : STATUS_LABEL[s]}
                 </button>
-              ))}
+              )
+            })}
+            <div className="flex-1" />
+            <div className="flex items-center gap-1 px-3 py-2 shrink-0">
+              <span className="font-sans text-[10px] uppercase tracking-widest" style={{ color: '#C8C2B0' }}>
+                {orders.length} {orders.length === 1 ? 'order' : 'orders'}
+              </span>
+            </div>
+          </div>
+
+          {ordersLoading ? (
+            <div className="border-x border-b" style={{ borderColor: '#E5E0D0' }}>
+              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="border-x border-b py-20 text-center" style={{ borderColor: '#E5E0D0' }}>
+              <p className="font-sans text-sm" style={{ color: '#888' }}>No orders found.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto" style={{ border: '1px solid #E5E0D0', borderTop: 'none' }}>
+              <table className="w-full">
+                <thead>
+                  <tr style={{ backgroundColor: '#2C2C2C' }}>
+                    {['# Order', 'Customer', 'Total', 'Date', 'Phone', 'Address', 'Status'].map((h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3.5 text-left font-sans text-[10px] tracking-widest uppercase"
+                        style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((o, i) => {
+                    const s = STATUS_STYLE[o.status]
+                    return (
+                      <motion.tr
+                        key={o.orderId}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.02 }}
+                        className="border-b transition-colors"
+                        style={{ borderColor: '#E5E0D0' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F5F1E3')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                      >
+                        <td className="px-4 py-3.5">
+                          <span className="font-sans text-xs tabular-nums font-semibold" style={{ color: '#2C2C2C', letterSpacing: '0.04em' }}>
+                            #{o.orderId}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="font-sans text-sm font-medium" style={{ color: '#2C2C2C' }}>{o.customerName}</span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="font-sans text-sm tabular-nums font-semibold" style={{ color: '#2C2C2C' }}>
+                            ₾{o.totalAmount.toFixed(2)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="font-sans text-xs tabular-nums" style={{ color: '#888' }}>
+                            {new Date(o.orderDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="font-sans text-xs tabular-nums" style={{ color: '#888' }}>{o.phoneNumber}</span>
+                        </td>
+                        <td className="px-4 py-3.5 max-w-[180px]">
+                          <span className="font-sans text-xs block truncate" style={{ color: '#888' }}>{o.address}</span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span
+                            className="inline-flex items-center gap-1.5 font-sans text-[11px] font-medium px-2.5 py-1 rounded-full"
+                            style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.border }} />
+                            {STATUS_LABEL[o.status]}
+                          </span>
+                        </td>
+                      </motion.tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
       )}
+
+      {/* Analytics Tab */}
+      {tab === 'analytics' && <AnalyticsDashboard />}
 
       {/* Create */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title={t('admin.createProduct')}>
@@ -301,7 +561,7 @@ export default function AdminPage() {
           {imageUrls.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
               {imageUrls.map((url, i) => {
-                const key = new URL(url.split('?')[0]).pathname.slice(1)
+                const key = decodeURIComponent(new URL(url.split('?')[0]).pathname.slice(1))
                 return (
                   <div key={i} className="relative group aspect-square">
                     <img src={url} alt={`img-${i}`} className="w-full h-full object-cover" />
