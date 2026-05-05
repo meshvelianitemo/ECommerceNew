@@ -2,6 +2,7 @@ using ECommerceNew.Application.Auth.DTOs;
 using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
 using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Domain.Entities.UserSide;
+using System.Security.Claims;
 
 namespace ECommerceNew.Application.Abstractions;
 
@@ -16,5 +17,6 @@ public interface IUserRepository
     Task ActivateUser(string email, CancellationToken cancellationToken = default);
     Task<EmailVerification?> AddEmailVerificationRecord(string verificationCode, string email);
     Task<Result> VerifyVerificationCode(string email, string code, CancellationToken cancellationToken = default);
+    Task<Result> LoginWithGoogleAsync(ClaimsPrincipal? claimsPrincipal);
 }
 

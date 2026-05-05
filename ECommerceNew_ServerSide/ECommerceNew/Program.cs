@@ -3,6 +3,7 @@ using ECommerceNew.Application;
 using ECommerceNew.Application.Responses.Exceptions;
 using ECommerceNew.Infrastructure;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
@@ -77,12 +78,35 @@ builder.Host.UseSerilog((context, config) =>
     config.ReadFrom.Configuration(context.Configuration);
 });
 
+
 builder.Services.AddAuthentication(x =>
 {
-x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddCookie()
+.AddGoogle(options =>
+{
+    var clientId = builder.Configuration["Google:ClientId"];
+
+    if(clientId == null)
+    {
+        throw new ArgumentNullException(nameof(clientId));
+    }
+
+    var clientSecret = builder.Configuration["Google:ClientSecret"];
+
+    if(clientSecret == null)
+    {
+        throw new ArgumentNullException(nameof(clientSecret));
+    }
+
+    options.ClientId = clientId;
+    options.ClientSecret = clientSecret;
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -130,7 +154,6 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowCredentials());         
 });
-
 
 var app = builder.Build();
 

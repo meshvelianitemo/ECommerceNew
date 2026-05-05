@@ -6,9 +6,16 @@ using ECommerceNew.Application.Auth.Commands.PasswordRecoveryCode;
 using ECommerceNew.Application.Auth.Commands.UserRegister;
 using ECommerceNew.Application.Auth.Commands.VerifyRecoveryCode;
 using ECommerceNew.Application.Auth.DTOs;
+using ECommerceNew.Domain.Entities.UserSide;
+using ECommerceNew.Infrastructure.Repositories;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Runtime.CompilerServices;
+using System.Security.Claims;
 
 namespace ECommerceNew.Api.Controllers.Auth
 {
@@ -174,6 +181,37 @@ namespace ECommerceNew.Api.Controllers.Auth
             return Ok(new { success = true, message = "Password reset successfully!" });
         }
 
-        
+        [HttpGet("Google")]
+        public async Task<IActionResult> GoogleLogin([FromQuery] string returnUrl,
+            LinkGenerator linkGenerator,
+            SignInManager<User> signManager,
+            HttpContext context)
+        {
+            var properties = signManager.ConfigureExternalAuthenticationProperties(
+                "Google",
+                linkGenerator.GetPathByName(context, "GoogleLoginCallback")
+                + $"?returnUrl={returnUrl}"
+                );
+            return Challenge(properties, "Google");
+        }
+
+        [HttpGet("Google/Callback")]
+        public async Task<IActionResult> GoogleAuth([FromQuery] string returnUrl,
+            LinkGenerator linkGenerator,
+            SignInManager<User> signManager,
+            HttpContext context)
+        {
+            var result = await context.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+
+            if (!result.Succeeded)
+            {
+                return Unauthorized();
+            }
+
+            await _sender.Send(new LoginWithGoogleCommand(result.Principal));
+
+            return Redirect(returnUrl);
+        }
+
     }
 }

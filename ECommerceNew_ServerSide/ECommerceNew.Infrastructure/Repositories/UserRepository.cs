@@ -256,5 +256,10 @@ public class UserRepository : IUserRepository
         await _context.SaveChangesAsync();
         return Result.Success();
     }
+
+    public async Task<Result> LoginWithGoogleAsync(ClaimsPrincipal? claimsPrincipal)
+    {
+        
+    }
 }
 
