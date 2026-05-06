@@ -1,6 +1,4 @@
-using Amazon.Runtime.Internal;
-using Amazon.S3;
-using APIMatic.Core.Request.Parameters;
+
 using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Auth.DTOs;
 using ECommerceNew.Application.ProductCQRS.DTOs.ProductDtos;
@@ -12,12 +10,8 @@ using ECommerceNew.Infrastructure.EfCore;
 using ECommerceNew.Infrastructure.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
-using System.Text;
 
 namespace ECommerceNew.Infrastructure.Repositories;
 
@@ -25,10 +19,12 @@ public class UserRepository : IUserRepository
 {
     private readonly ECommerceDbContext _context;
     private readonly ILogger<UserRepository> _logger;
+    private readonly ITokenService _tokenService;
 
 
-    public UserRepository(ECommerceDbContext context, ILogger<UserRepository> logger)
+    public UserRepository(ECommerceDbContext context, ILogger<UserRepository> logger, ITokenService tokenService)
     {
+        _tokenService = tokenService;
         _logger = logger;
         _context = context;    
     }
@@ -257,9 +253,72 @@ public class UserRepository : IUserRepository
         return Result.Success();
     }
 
-    public async Task<Result> LoginWithGoogleAsync(ClaimsPrincipal? claimsPrincipal)
+    public async Task<Result<string>> LoginWithGoogleAsync(ClaimsPrincipal? claimsPrincipal)
     {
-        
+        if (claimsPrincipal == null)
+        {
+            throw new ExternalLoginProviderException();
+        }
+
+        var email = claimsPrincipal.FindFirstValue(ClaimTypes.Email);
+        if (email == null)
+        {
+            throw new ExternalLoginProviderException();
+        }
+
+        var user = await GetUserByEmail(email);
+        if (user == null)
+        {
+            var newUser = new User
+            {
+                FirstName = claimsPrincipal.FindFirstValue(ClaimTypes.GivenName) ?? string.Empty,
+                LastName = claimsPrincipal.FindFirstValue(ClaimTypes.Surname) ?? string.Empty,
+                Email = email,
+                PasswordHash = string.Empty,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                RoleId = (int)UserRolesEnum.Client
+            };
+
+            var result = await AddUserAfterOAuth(newUser);
+            if(!result.IsSuccess)
+                throw new ExternalLoginProviderException();
+        }
+
+        var info = new UserLoginInfo("Google",
+            claimsPrincipal.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
+            "Google");
+
+        var loginResult = await AuthenticateGoogleUserAsync(user); // this is meant to be finished yet
+        if(!loginResult.IsSuccess)
+        {
+            return Result<string>.Failure(UserErrors.InvalidCredentials);
+        }
+        return Result<string>.Success(loginResult.Value);
+    }
+
+    public async Task<Result<string>> AuthenticateGoogleUserAsync(User user)
+    {
+        if (user == null)
+        {
+            return Result<string>.Failure(UserErrors.NotFound);
+        }
+        return Result<string>.Success(await _tokenService.GenerateTokenAsync(user));
+    }
+
+    public async Task<Result> AddUserAfterOAuth(User user, CancellationToken cancellationToken = default)
+    {
+        var hasher = new PasswordHasher<User>();
+
+        user.PasswordHash = hasher.HashPassword(
+            user,
+            Guid.NewGuid().ToString() + "!Aa1"
+        );
+
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+        return Result.Success();
     }
 }
 

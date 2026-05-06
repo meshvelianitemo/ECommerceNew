@@ -1,5 +1,6 @@
 ﻿using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Auth.Commands.EmailVerification;
+using ECommerceNew.Application.Auth.Commands.GoogleLogin;
 using ECommerceNew.Application.Auth.Commands.Login;
 using ECommerceNew.Application.Auth.Commands.PasswordRecovery;
 using ECommerceNew.Application.Auth.Commands.PasswordRecoveryCode;

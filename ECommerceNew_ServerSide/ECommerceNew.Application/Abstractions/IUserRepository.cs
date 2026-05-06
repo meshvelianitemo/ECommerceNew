@@ -18,5 +18,7 @@ public interface IUserRepository
     Task<EmailVerification?> AddEmailVerificationRecord(string verificationCode, string email);
     Task<Result> VerifyVerificationCode(string email, string code, CancellationToken cancellationToken = default);
     Task<Result> LoginWithGoogleAsync(ClaimsPrincipal? claimsPrincipal);
+    Task<Result> AddUserAfterOAuth(User user , CancellationToken cancellationToken = default);
+    Task<Result<string>> AuthenticateGoogleUserAsync(User user);
 }
 

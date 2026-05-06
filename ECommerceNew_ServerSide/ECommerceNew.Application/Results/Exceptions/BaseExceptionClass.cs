@@ -124,4 +124,13 @@ namespace ECommerceNew.Application.Responses.Exceptions
             
         }
     }
+
+    public class ExternalLoginProviderException : CustomException
+    {
+        public ExternalLoginProviderException(string message = "External auth error occurred!")
+            : base(message, "EXTERNAL_GOOGLE_AUTHENTICATION_FAILED")
+        {
+
+        }
+    }
 }
