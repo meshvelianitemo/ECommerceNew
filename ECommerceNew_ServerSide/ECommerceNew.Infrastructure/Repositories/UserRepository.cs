@@ -29,13 +29,6 @@ public class UserRepository : IUserRepository
         _context = context;    
     }
 
-    //public async Task<User> RegisterUserAsync(User user, CancellationToken cancellationToken = default)
-    //{
-    //    await _context.Users.AddAsync(user, cancellationToken);
-    //    await _context.SaveChangesAsync(cancellationToken);
-    //    return user;
-    //}
-
     public Task<User?> GetUserByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return _context.Users

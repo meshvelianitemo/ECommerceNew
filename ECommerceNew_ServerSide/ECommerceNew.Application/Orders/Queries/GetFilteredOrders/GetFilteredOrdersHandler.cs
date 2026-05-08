@@ -6,7 +6,7 @@ using ECommerceNew.Application.Results.Errors;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace ECommerceNew.Application.Orders.Queries
+namespace ECommerceNew.Application.Orders.Queries.FilteredOrdersQuery
 {
     public class GetFilteredOrdersHandler : IRequestHandler<GetFilteredOrdersQuery, Result<List<OrderDto>>>
     {

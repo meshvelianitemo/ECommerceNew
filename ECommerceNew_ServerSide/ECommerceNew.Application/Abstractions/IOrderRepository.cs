@@ -10,6 +10,7 @@ namespace ECommerceNew.Application.Abstractions
     {
         Task<List<OrderDto>> GetOrdersAsync(OrderFilter filter);
         Task<Result> CreateOrderWithItemsAsync(CreateOrderDto dto, CancellationToken cancellationToken = default);
-        Task<Result> UpdateOrder(UpdateOrderDto dto , CancellationToken cancellationToken = default);
+        Task<Result> UpdateOrderStatus(UpdateOrderDto dto, CancellationToken cancellationToken = default);
+        Task<Result<List<OrderDetailsDto?>>> GetOrderByIdAsync(int orderId);
     }
 }

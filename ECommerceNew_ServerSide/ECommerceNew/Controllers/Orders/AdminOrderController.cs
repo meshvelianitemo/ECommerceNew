@@ -1,20 +1,16 @@
-﻿using Amazon.S3.Model;
-using ECommerceNew.Application.Abstractions;
+﻿
 using ECommerceNew.Application.Orders.Commands.ChangeOrderStatus;
-using ECommerceNew.Application.Orders.Commands.PlaceOrder;
 using ECommerceNew.Application.Orders.DTOs;
-using ECommerceNew.Application.Orders.Queries;
-using ECommerceNew.Domain.enums;
+using ECommerceNew.Application.Orders.Queries.FilteredOrdersQuery;
+using ECommerceNew.Application.Orders.Queries.GetOrderItems;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
 namespace ECommerceNew.Api.Controllers.Orders
 {
     [Route("api/[controller]")]
-    [Authorize(Roles= "Admin")]
+    //[Authorize(Roles= "Admin")]
     [EnableRateLimiting("token")]
     [ApiController]
     public class AdminOrderController : ControllerBase
@@ -45,6 +41,28 @@ namespace ECommerceNew.Api.Controllers.Orders
 
             return Ok(new { success = result.IsSuccess, value = result.Value });
 
+        }
+
+        [HttpGet("{orderId}/items")]
+        public async Task<IActionResult> GetOrderDetails([FromQuery] int orderId)
+        {
+            var result = await _sender.Send(new GetOrderItemsQuery(orderId));
+
+            if (!result.IsSuccess)
+            {
+                return NotFound(new
+                {
+                    success = result.IsSuccess,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
+            }
+
+            return Ok(new { success = result.IsSuccess, value = result.Value });
         }
 
         [HttpPut]

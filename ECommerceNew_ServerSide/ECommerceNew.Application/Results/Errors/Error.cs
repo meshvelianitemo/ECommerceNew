@@ -102,5 +102,7 @@ namespace ECommerceNew.Application.Results.Errors
             new("Order.OrderNotFound", "Couldnt retrieve order", "Order -> Client");
         public static readonly Error NotEnoughStock =
             new("Order.NotEnoughStock", "Not enough stock for one or more products in the order", "Order -> Stock");
+        public static readonly Error EmptyOrder =
+            new("Order.EmptyOrder", "Order doesnt contain OrderItems", "Order");
     }
 }

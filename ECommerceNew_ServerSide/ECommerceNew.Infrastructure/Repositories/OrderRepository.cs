@@ -1,4 +1,5 @@
-﻿using ECommerceNew.Application.Abstractions;
+﻿using Amazon.Runtime.Internal;
+using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Orders.DTOs;
 using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Domain.Entities.Commerce;
@@ -87,6 +88,38 @@ namespace ECommerceNew.Infrastructure.Repositories
             return Result<int>.Success(order.Id);
         }
 
+        public async Task<Result<List<OrderDetailsDto?>>> GetOrderByIdAsync(int orderId)
+        {
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+            if (order == null)
+            {
+                return Result<List<OrderDetailsDto?>>.Failure(OrderErrors.OrderNotFound);
+            }
+
+            var result = await _context.OrderItems
+                .Where(oi => oi.OrderId == orderId)
+                .Select(oi => new OrderDetailsDto
+                {
+                    OrderItemId = oi.Id, 
+                    ProductId = oi.ProductId,
+                    Quantity = oi.Quantity,
+                    UnitPrice = oi.UnitPrice,
+                    TotalPrice = oi.TotalPrice,
+                    Name = oi.Product.Name,
+                    CategoryName = oi.Product.ProductCategory.CategoryName
+                })
+                .ToListAsync();
+            if (!(result.Count > 0))
+            {
+                return Result<List<OrderDetailsDto?>>.Failure(OrderErrors.EmptyOrder);
+            }
+
+            return Result<List<OrderDetailsDto?>>.Success(result);
+
+
+        }
+
         public async Task<List<OrderDto>> GetOrdersAsync(OrderFilter filter)
         {
             IQueryable<Order> query = _context.Orders.AsQueryable();
@@ -128,9 +161,21 @@ namespace ECommerceNew.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public Task<Result> UpdateOrder(UpdateOrderDto dto, CancellationToken cancellationToken = default)
+        public async Task<Result> UpdateOrderStatus(UpdateOrderDto dto, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == dto.Id);
+            if (order == null)
+            {
+                return Result.Failure(OrderErrors.OrderNotFound);
+            }
+
+            order.Address = dto.Address;
+            order.Status = dto.Status;
+            order.PhoneNumber = dto.PhoneNumber;
+
+            await _context.SaveChangesAsync(cancellationToken);
+            return Result.Success();
         }
     }
 }

@@ -12,9 +12,11 @@ namespace ECommerceNew.Application.Orders.Commands.ChangeOrderStatus
         {
             _orderRepository = orderRepository;
         }
-        public Task<Result> Handle(ChangeOrderStatusCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(ChangeOrderStatusCommand request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var result = await _orderRepository
+                .UpdateOrderStatus(request.UpdateDto, cancellationToken);
+            return result;
         }
     }
 }
