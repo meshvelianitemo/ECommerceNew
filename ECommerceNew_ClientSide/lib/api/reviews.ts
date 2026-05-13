@@ -6,7 +6,7 @@ export async function getProductReviews(
   page = 1,
   pageSize = 5
 ): Promise<{ success: true; value: PaginatedResponse<Review> }> {
-  return apiRequest(`/api/Reviews/product/${productId}?Page=${page}&PageSize=${pageSize}`)
+  return apiRequest(`/api/Reviews/product?ProductId=${productId}&Page=${page}&PageSize=${pageSize}`)
 }
 
 export async function createReview(data: {

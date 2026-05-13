@@ -10,8 +10,9 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace ECommerceNew.Api.Controllers.Orders
 {
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [EnableRateLimiting("token")]
+
     [ApiController]
     public class OrdersController : ControllerBase
     {
