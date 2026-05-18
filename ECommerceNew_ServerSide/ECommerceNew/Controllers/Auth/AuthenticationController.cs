@@ -2,6 +2,7 @@
 using ECommerceNew.Application.Auth.Commands.EmailVerification;
 using ECommerceNew.Application.Auth.Commands.GoogleLogin;
 using ECommerceNew.Application.Auth.Commands.Login;
+using ECommerceNew.Application.Auth.Commands.PasswordChange;
 using ECommerceNew.Application.Auth.Commands.PasswordRecovery;
 using ECommerceNew.Application.Auth.Commands.PasswordRecoveryCode;
 using ECommerceNew.Application.Auth.Commands.UserRegister;
@@ -180,6 +181,27 @@ namespace ECommerceNew.Api.Controllers.Auth
                 });
             }
             return Ok(new { success = true, message = "Password reset successfully!" });
+        }
+
+        [HttpPut("ChangePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] PasswordChangeDto request, CancellationToken cancellationToken)
+        {
+            var result = await _sender.Send(new PasswordChangeCommand(request), cancellationToken);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
+            }
+            return Ok(new { success = true, message = "Password changed successfully!" });
+
         }
 
         [HttpGet("Google")]

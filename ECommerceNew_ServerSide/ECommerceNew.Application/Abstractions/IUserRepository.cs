@@ -20,5 +20,6 @@ public interface IUserRepository
     Task<Result<string>> LoginWithGoogleAsync(ClaimsPrincipal? claimsPrincipal);
     Task<Result> AddUserAfterOAuth(User user , CancellationToken cancellationToken = default);
     Task<Result<string>> AuthenticateGoogleUserAsync(User user);
+    Task<Result> VerifyCurrentPassword(int userId, string currentPassword, CancellationToken cancellationToken = default);
 }
 

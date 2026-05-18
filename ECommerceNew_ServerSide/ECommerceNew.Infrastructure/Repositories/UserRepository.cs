@@ -313,5 +313,23 @@ public class UserRepository : IUserRepository
         await _context.SaveChangesAsync();
         return Result.Success();
     }
+
+    public async Task<Result> VerifyCurrentPassword(int userId, string currentPassword, CancellationToken cancellationToken = default)
+    {
+        PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+        if (user == null)
+        {
+            return Result.Failure(UserErrors.NotFound);
+        }
+        var result = passwordHasher
+            .VerifyHashedPassword(user, user.PasswordHash, currentPassword);
+        if (result == PasswordVerificationResult.Failed)
+        {
+            return Result.Failure(UserErrors.InvalidCredentials);
+        }
+        return Result.Success();
+    }
 }
 
