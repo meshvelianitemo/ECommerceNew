@@ -7,12 +7,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using ECommerceNew.Application.Cart.Commands.MergeCarts;
 
 namespace ECommerceNew.Api.Controllers.Cart
 {
 
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     [ApiController]
     public class CartController : ControllerBase
     {
@@ -66,6 +67,28 @@ namespace ECommerceNew.Api.Controllers.Cart
                 });
             }
             return Ok(new { success = true, message = "Item added to cart successfully." });
+        }
+
+        [EnableRateLimiting("sliding")]
+        [HttpPost("Merge")]
+        public async Task<IActionResult> MergeCarts([FromBody] List<AddToCartDto> dto, CancellationToken cancellationToken)
+        {
+            var result = await _sender.Send(new MergeCartsCommand(dto),
+                cancellationToken);
+            if (!result.IsSuccess)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    error = new
+                    {
+                        code = result.Error.Code,
+                        message = result.Error.Message,
+                        field = result.Error.Field
+                    }
+                });
+            }
+            return Ok(new { success = true, message = "Cart items merged successfully." });
         }
 
         [Authorize]

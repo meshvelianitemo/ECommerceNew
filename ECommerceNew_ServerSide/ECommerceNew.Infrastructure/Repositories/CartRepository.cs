@@ -191,5 +191,31 @@ namespace ECommerceNew.Infrastructure.Repositories
             return Result.Success();
         }
 
+        /// <summary>
+        /// this method gets a list of cart items from localstorage, from guest users and to not lose their 
+        /// carts after logging in, it merges those items to the actual db items
+        /// </summary>
+        /// <param name="cartItems"></param>
+        /// <param name="userId"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<Result> MergeCarts(List<AddToCartDto> cartItems, CancellationToken cancellationToken = default)
+        {
+            foreach (var item in cartItems)
+            {
+                var result = await AddToCart(
+                    item.ProductId, 
+                    item.UserId,
+                    item.Quantity,
+                    cancellationToken);
+
+                if (!result.IsSuccess)
+                {
+                    return Result.Failure(result.Error);
+                }
+            }
+
+            return Result.Success();
+        }
     }
 }
