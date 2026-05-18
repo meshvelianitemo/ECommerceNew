@@ -13,11 +13,10 @@ using ECommerceNew.Infrastructure.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using System.Runtime.CompilerServices;
-using System.Security.Claims;
 
 namespace ECommerceNew.Api.Controllers.Auth
 {
@@ -183,6 +182,7 @@ namespace ECommerceNew.Api.Controllers.Auth
             return Ok(new { success = true, message = "Password reset successfully!" });
         }
 
+        [Authorize]
         [HttpPut("ChangePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] PasswordChangeDto request, CancellationToken cancellationToken)
         {
