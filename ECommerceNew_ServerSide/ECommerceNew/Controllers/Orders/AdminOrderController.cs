@@ -43,8 +43,8 @@ namespace ECommerceNew.Api.Controllers.Orders
 
         }
 
-        [HttpGet("{orderId}/items")]
-        public async Task<IActionResult> GetOrderDetails([FromQuery] int orderId)
+        [HttpGet("{orderId}/Items")]
+        public async Task<IActionResult> GetOrderDetails([FromRoute] int orderId)
         {
             var result = await _sender.Send(new GetOrderItemsQuery(orderId));
 

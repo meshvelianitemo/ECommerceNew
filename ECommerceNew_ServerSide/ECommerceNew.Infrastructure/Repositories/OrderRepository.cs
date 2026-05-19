@@ -3,6 +3,7 @@ using ECommerceNew.Application.Abstractions;
 using ECommerceNew.Application.Orders.DTOs;
 using ECommerceNew.Application.Results.Errors;
 using ECommerceNew.Domain.Entities.Commerce;
+using ECommerceNew.Domain.Entities.UserSide;
 using ECommerceNew.Domain.enums;
 using ECommerceNew.Infrastructure.EfCore;
 using Microsoft.EntityFrameworkCore;
@@ -150,6 +151,25 @@ namespace ECommerceNew.Infrastructure.Repositories
                 {
                     OrderId = o.Id,
                     UserId = o.UserId,
+                    CustomerName = o.User.FirstName + " " + o.User.LastName,
+                    TotalAmount = o.TotalAmount,
+                    Status = o.Status,
+                    OrderDate = o.OrderDate,
+                    PhoneNumber = o.PhoneNumber,
+                    Address = o.Address
+                })
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+        }
+
+        public async Task<List<OrderDto>> GetUserOrders(UserOrderFilter filter)
+        {
+            _logger.LogInformation("Retrieving orders for UserId: {UserId}", filter.UserId);
+
+            return await _context.Orders
+                .Where(o => o.UserId == filter.UserId)
+                .Select(o => new OrderDto
+                {
                     CustomerName = o.User.FirstName + " " + o.User.LastName,
                     TotalAmount = o.TotalAmount,
                     Status = o.Status,

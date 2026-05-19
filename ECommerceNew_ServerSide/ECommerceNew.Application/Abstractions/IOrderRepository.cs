@@ -9,6 +9,7 @@ namespace ECommerceNew.Application.Abstractions
     public interface IOrderRepository
     {
         Task<List<OrderDto>> GetOrdersAsync(OrderFilter filter);
+        Task<List<OrderDto>> GetUserOrders(UserOrderFilter filter);
         Task<Result> CreateOrderWithItemsAsync(CreateOrderDto dto, CancellationToken cancellationToken = default);
         Task<Result> UpdateOrderStatus(UpdateOrderDto dto, CancellationToken cancellationToken = default);
         Task<Result<List<OrderDetailsDto?>>> GetOrderByIdAsync(int orderId);
